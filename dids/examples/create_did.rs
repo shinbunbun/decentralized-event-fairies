@@ -10,6 +10,8 @@ use identity_iota::account::IdentitySetup;
 use identity_iota::account::Result;
 use identity_iota::account_storage::Stronghold;
 use identity_iota::client::ExplorerUrl;
+use identity_iota::client::ResolvedIotaDocument;
+use identity_iota::client::Resolver;
 use identity_iota::iota_core::IotaDID;
 
 #[tokio::main]
@@ -50,6 +52,15 @@ async fn main() -> Result<()> {
         "[Example] Explore the DID Document = {}",
         explorer.resolver_url(iota_did)?
     );
+
+    // Retrieve the published DID Document from the Tangle.
+    let resolver: Resolver = Resolver::new().await?;
+    let resolved_did_document: ResolvedIotaDocument = resolver.resolve(iota_did).await?;
+
+    println!("Resolved DID Document > {:#?}", resolved_did_document);
+
+    // The resolved document should be the same as what we published.
+    assert_eq!(resolved_did_document.document, *account.document());
 
     Ok(())
 }

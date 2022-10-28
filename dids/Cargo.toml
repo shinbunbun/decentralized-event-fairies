@@ -13,3 +13,11 @@ pretty_env_logger = "0.4.0"
 [[example]]
 name = "create_did"
 path = "examples/create_did.rs"
+
+[[example]]
+name = "create_vc"
+path = "examples/create_vc.rs"
+
+[[example]]
+name = "create_vp"
+path = "examples/create_vp.rs"

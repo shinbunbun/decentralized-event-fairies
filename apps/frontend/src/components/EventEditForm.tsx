@@ -6,6 +6,7 @@ import {
   FormLabel,
   Textarea,
   Button,
+  Divider,
 } from '@chakra-ui/react';
 
 export function EventEditForm() {
@@ -43,7 +44,9 @@ export function EventEditForm() {
           <Input type="datetime-local" />
         </FormControl>
 
-        <Button>作成</Button>
+        <Divider />
+
+        <Button colorScheme="blue">作成</Button>
       </VStack>
     </Box>
   );

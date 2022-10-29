@@ -12,7 +12,9 @@ pub async fn issue(req: String, param: Path<String>) -> impl Responder {
 
     let holder = create_holder_account(&user_id).await.unwrap();
 
-    let subject_value = Value::from_json(&req).unwrap();
+    let mut subject_value = Value::from_json(&req).unwrap();
+
+    subject_value["id"] = Value::String(holder.did().to_string());
 
     let credential_type = "EventJoinProofCredential";
 

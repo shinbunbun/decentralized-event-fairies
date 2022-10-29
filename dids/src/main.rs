@@ -1,4 +1,5 @@
 mod error;
+mod handler;
 mod holder;
 mod issuer;
 mod router;

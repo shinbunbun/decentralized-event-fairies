@@ -64,15 +64,7 @@ pub async fn issue_vc(
     Ok(credential)
 }
 
-async fn create_stronghold(
-    path: &str,
-) -> Result<Stronghold, identity_iota::account_storage::Error> {
-    let stronghold_path: PathBuf = path.into();
-    let password: String = "my-password".to_owned();
-    Stronghold::new(&stronghold_path, password, None).await
-}
-
-async fn create_holder_account(user_id: &str) -> Result<Account, Error> {
+pub async fn create_holder_account(user_id: &str) -> Result<Account, Error> {
     let stronghold = create_stronghold(&("./hodl/".to_string() + user_id + ".hodl"))
         .await
         .map_err(Error::AccountStorage)?;
@@ -81,6 +73,14 @@ async fn create_holder_account(user_id: &str) -> Result<Account, Error> {
         .create_identity(IdentitySetup::default())
         .await
         .map_err(Error::Account)
+}
+
+async fn create_stronghold(
+    path: &str,
+) -> Result<Stronghold, identity_iota::account_storage::Error> {
+    let stronghold_path: PathBuf = path.into();
+    let password: String = "my-password".to_owned();
+    Stronghold::new(&stronghold_path, password, None).await
 }
 
 #[cfg(test)]

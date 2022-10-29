@@ -19,7 +19,7 @@ function SignUp() {
 export function Navbar() {
   return (
     <Box as="header" pb={6}>
-      <Box as="nav" boxShadow="base">
+      <Box as="nav" boxShadow="base" background="white">
         <Container maxW="container.md">
           <HStack py={2}>
             <Spacer />

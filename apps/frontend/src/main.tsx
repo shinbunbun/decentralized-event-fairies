@@ -1,8 +1,9 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 
-import { Router } from './router';
+import { router } from './router';
 import { theme } from './theme';
 
 const root = ReactDOM.createRoot(
@@ -12,7 +13,7 @@ root.render(
   <StrictMode>
     <ColorModeScript initialColorMode={theme['config']['initialColorMode']} />
     <ChakraProvider theme={theme}>
-      <Router />
+      <RouterProvider router={router} />
     </ChakraProvider>
   </StrictMode>
 );

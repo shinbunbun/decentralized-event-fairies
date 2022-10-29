@@ -10,6 +10,7 @@
   "private": true,
   "devDependencies": {
     "@emotion/babel-plugin": "11.10.2",
+    "@faker-js/faker": "^7.6.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",
     "@nrwl/cli": "15.0.4",
@@ -58,6 +59,7 @@
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "core-js": "^3.6.5",
+    "date-fns": "^2.29.3",
     "firebase": "^9.13.0",
     "framer-motion": "^7.6.2",
     "react": "18.2.0",

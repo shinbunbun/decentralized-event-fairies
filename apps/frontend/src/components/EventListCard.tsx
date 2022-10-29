@@ -17,14 +17,14 @@ function EventListItem(props: EventData) {
   const format = 'MM/dd';
 
   return (
-    <Box width="100%">
+    <Box width="100%" px={4}>
       <HStack spacing={6}>
-        <Text>{formatDate(props.start, format)}</Text>
-        <AspectRatio w="64px" ratio={1 / 1}>
+        <Text fontWeight="semibold">{formatDate(props.start, format)}</Text>
+        <AspectRatio w="96px" ratio={3 / 2}>
           <Image src={props.thumbnail} alt="thumbnail" borderRadius="md" />
         </AspectRatio>
         <ChakraLink as={Link} to={`/event/${props.id}`}>
-          <Text fontSize="lg" as="u">
+          <Text fontSize="lg" as="u" fontWeight="semibold">
             {props.title}
           </Text>
         </ChakraLink>

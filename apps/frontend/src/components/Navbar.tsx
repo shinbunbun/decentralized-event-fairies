@@ -37,7 +37,7 @@ function CreateEvent() {
 
 function Account() {
   return (
-    <ChakraLink as={Link} to="/user/me">
+    <ChakraLink as={Link} to="/user/1">
       <Avatar size="md" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
     </ChakraLink>
   );

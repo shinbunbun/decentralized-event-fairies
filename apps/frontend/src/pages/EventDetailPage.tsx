@@ -1,14 +1,16 @@
-import { createEventData } from '../lib';
+import { useRecoilValue } from 'recoil';
+
+import { getEventData } from '../lib';
 import { EventOverviewCard } from '../components/EventOverviewCard';
 import { EventDetailCard } from '../components/EventDetailCard';
 
 function EventDetailPage() {
-  const eventData = createEventData();
+  const event = useRecoilValue(getEventData({ eventId: 1 }));
 
   return (
     <>
-      <EventOverviewCard {...eventData} />
-      <EventDetailCard {...eventData} />
+      <EventOverviewCard {...event} />
+      <EventDetailCard {...event} />
     </>
   );
 }

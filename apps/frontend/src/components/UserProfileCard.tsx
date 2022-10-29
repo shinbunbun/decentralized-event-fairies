@@ -1,11 +1,7 @@
 import { Avatar, Box, VStack, Heading } from '@chakra-ui/react';
+import { UserData } from '../lib';
 
-export interface UserProfileCardProps {
-  name: string;
-  photo: string;
-}
-
-export function UserProfileCard(props: UserProfileCardProps) {
+export function UserProfileCard(props: UserData) {
   return (
     <Box pb={6}>
       <Box
@@ -16,7 +12,7 @@ export function UserProfileCard(props: UserProfileCardProps) {
         background="white"
       >
         <VStack spacing={4}>
-          <Avatar size="2xl" name={props.name} src={props.photo} />
+          <Avatar size="2xl" name={props.name} src={props.image} />
           <Heading>{props.name}</Heading>
         </VStack>
       </Box>

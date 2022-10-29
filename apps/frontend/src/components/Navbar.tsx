@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -6,6 +7,7 @@ import {
   Container,
   Spacer,
   IconButton,
+  Link as ChakraLink,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 
@@ -27,13 +29,17 @@ function SignUp() {
 
 function CreateEvent() {
   return (
-    <IconButton icon={<AddIcon />} aria-label="Create event" variant="link" />
+    <ChakraLink as={Link} to="/event/create">
+      <IconButton icon={<AddIcon />} aria-label="Create event" variant="link" />
+    </ChakraLink>
   );
 }
 
 function Account() {
   return (
-    <Avatar size="md" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+    <ChakraLink as={Link} to="/user/me">
+      <Avatar size="md" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+    </ChakraLink>
   );
 }
 

@@ -1,4 +1,4 @@
-use identity_iota::{
+/* use identity_iota::{
     core::{Duration, FromJson, Timestamp, Url},
     credential::{Credential, Presentation, PresentationBuilder},
 };
@@ -34,3 +34,4 @@ pub fn create_vp(
 
     Ok(())
 }
+ */

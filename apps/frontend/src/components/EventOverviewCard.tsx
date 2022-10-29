@@ -9,14 +9,9 @@ import {
 } from '@chakra-ui/react';
 import { format as formatDate } from 'date-fns';
 
-export interface EventOverviewCardProps {
-  title: string;
-  thumbnail: string;
-  start: Date;
-  end: Date;
-}
+import { EventData } from '../lib';
 
-export function EventOverviewCard(props: EventOverviewCardProps) {
+export function EventOverviewCard(props: EventData) {
   const format = 'yyyy/MM/dd HH:mm';
 
   return (
@@ -27,9 +22,11 @@ export function EventOverviewCard(props: EventOverviewCardProps) {
         overflow="hidden"
         background="white"
       >
-        <AspectRatio ratio={3 / 1}>
-          <Image src={props.thumbnail} alt="thumbnail" />
-        </AspectRatio>
+        {props.thumbnail && (
+          <AspectRatio ratio={3 / 1}>
+            <Image src={props.thumbnail} alt="thumbnail" />
+          </AspectRatio>
+        )}
         <VStack p={6} spacing={4}>
           <Heading>{props.title}</Heading>
           <Text>

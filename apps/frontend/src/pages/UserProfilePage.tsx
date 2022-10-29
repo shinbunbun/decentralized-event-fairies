@@ -1,14 +1,16 @@
-import { createUserData } from '../lib';
+import { useRecoilValue } from 'recoil';
+
+import { getUserData } from '../lib';
 import { UserProfileCard } from '../components/UserProfileCard';
 import { EventListCard } from '../components/EventListCard';
 
 function UserProfilePage() {
-  const data = createUserData();
+  const user = useRecoilValue(getUserData({ userId: 1 }));
 
   return (
     <>
-      <UserProfileCard {...data} />
-      <EventListCard {...data} />
+      <UserProfileCard {...user} />
+      <EventListCard events={[]} />
     </>
   );
 }

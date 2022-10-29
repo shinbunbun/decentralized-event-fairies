@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 
 import { router } from './router';
@@ -11,9 +12,11 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <StrictMode>
-    <ColorModeScript initialColorMode={theme['config']['initialColorMode']} />
-    <ChakraProvider theme={theme}>
-      <RouterProvider router={router} />
-    </ChakraProvider>
+    <RecoilRoot>
+      <ColorModeScript initialColorMode={theme['config']['initialColorMode']} />
+      <ChakraProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ChakraProvider>
+    </RecoilRoot>
   </StrictMode>
 );

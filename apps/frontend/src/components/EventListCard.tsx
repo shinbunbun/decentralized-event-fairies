@@ -48,9 +48,13 @@ export function EventListCard(props: EventListCardProps) {
         background="white"
       >
         <VStack spacing={4} divider={<StackDivider />}>
-          {props.events.map((event) => (
-            <EventListItem key={event.id} {...event} />
-          ))}
+          {props.events.length === 0 ? (
+            <p>表示するイベントがありません...</p>
+          ) : (
+            props.events.map((event) => (
+              <EventListItem key={event.id} {...event} />
+            ))
+          )}
         </VStack>
       </Box>
     </Box>

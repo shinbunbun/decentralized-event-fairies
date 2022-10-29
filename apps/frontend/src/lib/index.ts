@@ -1,33 +1,69 @@
-import { faker } from '@faker-js/faker';
+import { selectorFamily } from 'recoil';
+
+const API_URL = 'http://localhost:8080/v1/graphql';
 
 export interface EventData {
   id: string;
   title: string;
-  thumbnail: string;
+  thumbnail?: string;
   description: string;
   start: Date;
   end: Date;
 }
 
-export const createEventData = (): EventData => ({
-  id: faker.datatype.uuid(),
-  title: faker.lorem.words(),
-  thumbnail: faker.image.nature(),
-  description: faker.lorem.paragraphs(),
-  start: faker.date.recent(),
-  end: faker.date.soon(),
+export const getEventData = selectorFamily<EventData, { eventId: number }>({
+  key: 'getEventData',
+  get:
+    ({ eventId }) =>
+    async () => {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query:
+            'query getEventByID($id: Int!) { getEvent(id: $id) { id title thumbnail description start end } }',
+          variables: { id: eventId },
+        }),
+      });
+      const data = await res.json();
+      const event = data['data']['getEvent'];
+      return {
+        id: event['id'],
+        title: event['title'],
+        thumbnail: event['thumbnail'],
+        description: event['description'],
+        start: new Date(event['start']),
+        end: new Date(event['end']),
+      };
+    },
 });
 
 export interface UserData {
   id: string;
   name: string;
-  photo: string;
-  events: EventData[];
+  image: string;
+  email: string;
 }
 
-export const createUserData = (): UserData => ({
-  id: faker.datatype.uuid(),
-  name: faker.name.fullName(),
-  photo: faker.image.avatar(),
-  events: faker.datatype.array().map(() => createEventData()),
+export const getUserData = selectorFamily<UserData, { userId: number }>({
+  key: 'getUserData',
+  get:
+    ({ userId }) =>
+    async () => {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query:
+            'query getUserByID($id: Int!) { getUser(id: $id) { id email image name } }',
+          variables: { id: userId },
+        }),
+      });
+      const data = await res.json();
+      return data['data']['getUser'] as UserData;
+    },
 });

@@ -1,9 +1,11 @@
-/* use identity_iota::{
+use identity_iota::{
+    account::{Account, MethodContent},
     core::{Duration, FromJson, Timestamp, Url},
     credential::{Credential, Presentation, PresentationBuilder},
+    crypto::ProofOptions,
 };
 
-use crate::{error::Error, utils::random};
+use crate::{error::Error, issuer::create_holder_account, utils::random};
 
 pub struct VerifierRequest {
     pub challenge: String,
@@ -12,14 +14,15 @@ pub struct VerifierRequest {
 
 pub struct HolderRequest {
     pub credential_json: String,
+    pub user_id: String,
     pub did: String,
 }
 
-pub fn create_vp(
+pub async fn create_vp(
     verifier_request: &VerifierRequest,
     holder_request: &HolderRequest,
-) -> Result<(), Error> {
-    let challenge = random::gen();
+) -> Result<Presentation, Error> {
+    let challenge = &verifier_request.challenge;
 
     let expires = Timestamp::from_unix(verifier_request.expires).map_err(Error::Core)?;
 
@@ -32,6 +35,57 @@ pub fn create_vp(
         .build()
         .map_err(Error::Credential)?;
 
-    Ok(())
+    let mut holder = create_holder_account(&holder_request.user_id).await?;
+
+    holder
+        .update_identity()
+        .create_method()
+        .content(MethodContent::GenerateEd25519)
+        .fragment("key")
+        .apply()
+        .await
+        .map_err(Error::Account)?;
+
+    holder
+        .sign(
+            "#key",
+            &mut presentation,
+            ProofOptions::new()
+                .challenge(challenge.to_string())
+                .expires(expires),
+        )
+        .await
+        .map_err(Error::Account)?;
+
+    Ok(presentation)
 }
- */
+
+#[cfg(test)]
+mod tests {
+    use identity_iota::core::{Duration, Timestamp};
+
+    use super::{HolderRequest, VerifierRequest};
+
+    #[tokio::test]
+    async fn create_vp_test() {
+        let verifier_request = VerifierRequest {
+            challenge: "challenge".to_string(),
+            expires: Timestamp::now_utc()
+                .checked_add(Duration::minutes(10))
+                .unwrap()
+                .to_unix(),
+        };
+
+        let holder_request = HolderRequest {
+            credential_json: "{\"@context\":\"https://www.w3.org/2018/credentials/v1\",\"type\":[\"VerifiableCredential\",\"EventJoinProofCredential\"],\"credentialSubject\":{\"id\":\"did:iota:3jGTAQDx1Kc2tc9Z43UeB43rFmVmUQ3jdpvrwVxorNM1\",\"ping\":\"pong\"},\"issuer\":\"did:iota:DrQKu5ztsz8gxoDH2xP1v4k3kwMUwftzK7S5HzrE4j47\",\"issuanceDate\":\"2022-10-29T12:19:39Z\",\"proof\":{\"type\":\"JcsEd25519Signature2020\",\"verificationMethod\":\"did:iota:DrQKu5ztsz8gxoDH2xP1v4k3kwMUwftzK7S5HzrE4j47#issuerKey\",\"signatureValue\":\"43tamQv2SNX7PaHVAGzoeb5wxvV2uQG5UVVfz1Affk2gGR1pB4i54Eiqna3QMZkYtdc7HyrSqbiXxyx3er5YVPwc\"}}".to_string(),
+            user_id: "2".to_string(),
+            did: "did:iota:3jGTAQDx1Kc2tc9Z43UeB43rFmVmUQ3jdpvrwVxorNM1".to_string(),
+        };
+
+        let vp = super::create_vp(&verifier_request, &holder_request)
+            .await
+            .unwrap();
+
+        println!("{:#}", vp);
+    }
+}

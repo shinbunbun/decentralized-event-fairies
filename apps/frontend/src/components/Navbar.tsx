@@ -22,7 +22,7 @@ function SignIn() {
   const onClick = async () => {
     setLoading(true);
     const result = await signIn();
-    navigate(`/user/${result.user.uid}`);
+    // navigate(`/user/${result.user.uid}`);
     setLoading(false);
   };
 

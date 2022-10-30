@@ -194,14 +194,11 @@ export const issueVCs = async (
   const payload = { ...user, ...event };
   const res = await fetch(BUNBUN_URL + `/issue/${user.id}`, {
     method: 'POST',
-    mode: 'no-cors',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
-  const text = await res.text()
-  console.log(text);
   const data = await res.json();
   return data as VerifiableCredentials;
 };
@@ -218,7 +215,6 @@ export const issueVPs = async (
   };
   const res = await fetch(BUNBUN_URL + `/presentation/${user.id}`, {
     method: 'POST',
-    mode: 'no-cors',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -231,7 +227,6 @@ export const issueVPs = async (
 export const verify = async (vps: string) => {
   await fetch(BUNBUN_URL + `/verify`, {
     method: 'POST',
-    mode: 'no-cors',
     headers: {
       'Content-Type': 'application/json',
     },

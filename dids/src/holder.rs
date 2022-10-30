@@ -1,11 +1,14 @@
+use std::str::FromStr;
+
 use identity_iota::{
     account::{Account, MethodContent},
-    core::{Duration, FromJson, Timestamp, Url},
+    core::{FromJson, Timestamp, Url},
     credential::{Credential, Presentation, PresentationBuilder},
     crypto::ProofOptions,
+    iota_core::IotaDID,
 };
 
-use crate::{error::Error, issuer::create_holder_account, utils::random};
+use crate::{error::Error, issuer::create_stronghold};
 
 pub struct VerifierRequest {
     pub challenge: String,
@@ -35,7 +38,16 @@ pub async fn create_vp(
         .build()
         .map_err(Error::Credential)?;
 
-    let mut holder = create_holder_account(&holder_request.user_id).await?;
+    let stronghold =
+        create_stronghold(&("./hodl/".to_string() + &holder_request.user_id + ".hodl"))
+            .await
+            .map_err(Error::AccountStorage)?;
+
+    let mut holder: Account = Account::builder()
+        .storage(stronghold)
+        .load_identity(IotaDID::from_str(&holder_request.did).unwrap())
+        .await
+        .map_err(Error::Account)?;
 
     holder
         .update_identity()
@@ -62,7 +74,6 @@ pub async fn create_vp(
 
 #[cfg(test)]
 mod tests {
-    use identity_iota::core::{Duration, Timestamp};
 
     use super::{HolderRequest, VerifierRequest};
 
@@ -70,10 +81,7 @@ mod tests {
     async fn create_vp_test() {
         let verifier_request = VerifierRequest {
             challenge: "challenge".to_string(),
-            expires: Timestamp::now_utc()
-                .checked_add(Duration::minutes(10))
-                .unwrap()
-                .to_unix(),
+            expires: 4128501858,
         };
 
         let holder_request = HolderRequest {

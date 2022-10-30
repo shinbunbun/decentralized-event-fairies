@@ -1,3 +1,4 @@
+use actix_web::ResponseError;
 use identity_iota::{
     account, account_storage,
     client::{self, CompoundCredentialValidationError},
@@ -19,4 +20,21 @@ pub enum Error {
     CompoundCredentialValidation(#[from] CompoundCredentialValidationError),
     #[error("Client: {0}")]
     Client(#[from] client::Error),
+}
+
+impl ResponseError for Error {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self {
+            Error::AccountStorage(_)
+            | Error::Account(_)
+            | Error::Core(_)
+            | Error::Credential(_)
+            | Error::CompoundCredentialValidation(_)
+            | Error::Client(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
+        actix_web::HttpResponse::build(self.status_code()).body(self.to_string())
+    }
 }

@@ -228,14 +228,14 @@ export const issueVPs = async (
   return data;
 };
 
-export const verify = async (vps: Record<string, unknown>) => {
+export const verify = async (vps: string) => {
   await fetch(BUNBUN_URL + `/verify`, {
     method: 'POST',
     mode: 'no-cors',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(vps),
+    body: vps,
   });
   return true;
 };

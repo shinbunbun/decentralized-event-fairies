@@ -7,6 +7,7 @@ const EventCreatePage = lazy(() => import('./pages/EventCreatePage'));
 const EventDetailPage = lazy(() => import('./pages/EventDetailPage'));
 const EventUpdatePage = lazy(() => import('./pages/EventUpdatePage'));
 const UserProfilePage = lazy(() => import('./pages/UserProfilePage'));
+const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
         path: 'user/:userId',
         element: <UserProfilePage />,
       },
+      {
+        path: 'verify',
+        element: <VerifyPage />,
+      }
     ],
   },
 ]);

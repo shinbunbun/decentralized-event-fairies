@@ -1,0 +1,27 @@
+{
+  "functions": [
+    {
+      "source": "dist/apps/functions",
+      "ignore": ["**/.*", "**/node_modules/**"]
+    }
+  ],
+  "hosting": {
+    "public": "dist/apps/frontend",
+    "ignore": ["**/.*", "**/node_modules/**"]
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

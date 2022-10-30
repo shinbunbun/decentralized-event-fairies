@@ -75,7 +75,7 @@ pub async fn create_holder_account(user_id: &str) -> Result<Account, Error> {
         .map_err(Error::Account)
 }
 
-async fn create_stronghold(
+pub async fn create_stronghold(
     path: &str,
 ) -> Result<Stronghold, identity_iota::account_storage::Error> {
     let stronghold_path: PathBuf = path.into();

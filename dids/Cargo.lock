@@ -752,6 +752,7 @@ dependencies = [
  "env_logger 0.9.1",
  "identity_iota",
  "pretty_env_logger",
+ "serde",
  "serde_json",
  "tokio",
  "uuid",

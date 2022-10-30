@@ -136,7 +136,7 @@ export interface UserData {
 }
 
 const getUserDataQuery = `
-query getUserByID($id: Int!) {
+query getUserByID($id: String!) {
   getUser(id: $id) {
     id name image email
   }
@@ -161,7 +161,7 @@ export const getUserData = selectorFamily<
         },
         body: JSON.stringify({
           query: getUserDataQuery,
-          variables: { id: Number(userId) },
+          variables: { id: userId },
         }),
       });
       const data = await res.json();

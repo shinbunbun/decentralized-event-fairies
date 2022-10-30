@@ -13,7 +13,10 @@
         "outputPath": "dist/apps/functions",
         "main": "apps/functions/src/main.ts",
         "tsConfig": "apps/functions/tsconfig.app.json",
-        "assets": ["apps/functions/src/assets"]
+        "assets": [
+          "apps/functions/src/assets",
+          "apps/functions/src/package.json"
+        ]
       },
       "configurations": {
         "production": {

@@ -191,3 +191,19 @@ curl -X POST http://localhost:8080/v1/metadata \
   }
 }'
 echo
+
+
+curl -X POST http://localhost:8080/v1/metadata \
+     -d '
+{
+  "type": "pg_create_object_relationship",
+  "args": {
+    "source": "test_database_dayo",
+    "table": "user_participant_event",
+    "name": "participant_event",
+    "using": {
+      "foreign_key_constraint_on" : "event_id"
+    }
+  }
+}'
+echo

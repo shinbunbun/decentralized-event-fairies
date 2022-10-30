@@ -11,6 +11,14 @@ export interface EventData {
   end: Date;
 }
 
+const getEventDataQuery = `
+query getEventByID($id: Int!) {
+  getEvent(id: $id) {
+    id title thumbnail description start end
+  }
+}
+`;
+
 export const getEventData = selectorFamily<EventData, { eventId: number }>({
   key: 'getEventData',
   get:
@@ -22,8 +30,7 @@ export const getEventData = selectorFamily<EventData, { eventId: number }>({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query:
-            'query getEventByID($id: Int!) { getEvent(id: $id) { id title thumbnail description start end } }',
+          query: getEventDataQuery,
           variables: { id: eventId },
         }),
       });
@@ -40,12 +47,53 @@ export const getEventData = selectorFamily<EventData, { eventId: number }>({
     },
 });
 
+const createEventDataQuery = `
+mutation createEvent(
+  $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!
+) {
+  createEvent(object: {
+    title: $title,
+    thumbnail: $thumbnail,
+    description: $description,
+    start: $start,
+    end: $end
+  }) {
+    id
+  }
+}
+`;
+
+export const createEventData = async (
+  variables: Omit<EventData, 'id'>
+): Promise<number> => {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: createEventDataQuery,
+      variables: variables,
+    }),
+  });
+  const data = await res.json();
+  return data['data']['createEvent']['id'];
+};
+
 export interface UserData {
   id: string;
   name: string;
   image: string;
   email: string;
 }
+
+const getUserDataQuery = `
+query getUserByID($id: Int!) {
+  getUser(id: $id) {
+    id name image email
+  }
+}
+`;
 
 export const getUserData = selectorFamily<UserData, { userId: number }>({
   key: 'getUserData',
@@ -58,8 +106,7 @@ export const getUserData = selectorFamily<UserData, { userId: number }>({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query:
-            'query getUserByID($id: Int!) { getUser(id: $id) { id email image name } }',
+          query: getUserDataQuery,
           variables: { id: userId },
         }),
       });

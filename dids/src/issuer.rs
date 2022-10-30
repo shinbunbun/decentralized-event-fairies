@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use identity_iota::{
-    account::{Account, IdentitySetup, MethodContent, Result},
+    account::{self, Account, IdentitySetup, MethodContent, Result},
     account_storage::Stronghold,
     client::{CredentialValidationOptions, CredentialValidator, FailFast},
     core::{Url, Value},
@@ -19,15 +19,12 @@ pub async fn issue_vc(
     // credential_id: &str,
     credential_type: &str,
 ) -> Result<Credential, Error> {
-    let stronghold = create_stronghold("./hodl/issuer.hodl")
-        .await
-        .map_err(Error::AccountStorage)?;
+    let stronghold = create_stronghold("./hodl/issuer.hodl").await?;
 
     let mut issuer: Account = Account::builder()
         .storage(stronghold)
         .create_identity(IdentitySetup::default())
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
     issuer
         .update_identity()
@@ -35,44 +32,36 @@ pub async fn issue_vc(
         .content(MethodContent::GenerateEd25519)
         .fragment("issuerKey")
         .apply()
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
-    let subject: Subject = Subject::from_json_value(subject_value).map_err(Error::Core)?;
+    let subject: Subject = Subject::from_json_value(subject_value)?;
 
     let mut credential: Credential = CredentialBuilder::default()
-        // .id(Url::parse(credential_id).map_err(Error::Core)?)
-        .issuer(Url::parse(issuer.did().as_str()).map_err(Error::Core)?)
+        .issuer(Url::parse(issuer.did().as_str())?)
         .type_(credential_type)
         .subject(subject)
-        .build()
-        .map_err(Error::Credential)?;
+        .build()?;
 
     issuer
         .sign("#issuerKey", &mut credential, ProofOptions::default())
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
     CredentialValidator::validate(
         &credential,
         &issuer.document(),
         &CredentialValidationOptions::default(),
         FailFast::FirstError,
-    )
-    .map_err(Error::CompoundCredentialValidation)?;
+    )?;
 
     Ok(credential)
 }
 
-pub async fn create_holder_account(user_id: &str) -> Result<Account, Error> {
-    let stronghold = create_stronghold(&("./hodl/".to_string() + user_id + ".hodl"))
-        .await
-        .map_err(Error::AccountStorage)?;
+pub async fn create_holder_account(user_id: &str) -> Result<Account, account::Error> {
+    let stronghold = create_stronghold(&("./hodl/".to_string() + user_id + ".hodl")).await?;
     Account::builder()
         .storage(stronghold)
         .create_identity(IdentitySetup::default())
         .await
-        .map_err(Error::Account)
 }
 
 pub async fn create_stronghold(

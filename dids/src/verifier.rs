@@ -11,7 +11,7 @@ use identity_iota::{
 use crate::error::Error;
 
 pub async fn verify(presentation: &str, challenge: &str) -> Result<(), Error> {
-    let presentation: Presentation = Presentation::from_json(presentation).map_err(Error::Core)?;
+    let presentation: Presentation = Presentation::from_json(presentation)?;
 
     let presentation_verifier_options: VerifierOptions = VerifierOptions::new()
         .challenge(challenge.to_owned())
@@ -29,7 +29,7 @@ pub async fn verify(presentation: &str, challenge: &str) -> Result<(), Error> {
         .shared_validation_options(credential_validation_options)
         .subject_holder_relationship(SubjectHolderRelationship::AlwaysSubject);
 
-    let resolver: Resolver = Resolver::new().await.map_err(Error::Client)?;
+    let resolver: Resolver = Resolver::new().await?;
     resolver
         .verify_presentation(
             &presentation,
@@ -38,8 +38,7 @@ pub async fn verify(presentation: &str, challenge: &str) -> Result<(), Error> {
             None,
             None,
         )
-        .await
-        .map_err(Error::Client)?;
+        .await?;
 
     Ok(())
 }

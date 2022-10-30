@@ -19,11 +19,17 @@ query getEventByID($id: Int!) {
 }
 `;
 
-export const getEventData = selectorFamily<EventData, { eventId: number }>({
+export const getEventData = selectorFamily<
+  EventData | null,
+  { eventId: string | undefined }
+>({
   key: 'getEventData',
   get:
     ({ eventId }) =>
     async () => {
+      if (eventId === undefined) {
+        return null;
+      }
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -31,7 +37,7 @@ export const getEventData = selectorFamily<EventData, { eventId: number }>({
         },
         body: JSON.stringify({
           query: getEventDataQuery,
-          variables: { id: eventId },
+          variables: { id: Number(eventId) },
         }),
       });
       const data = await res.json();
@@ -95,11 +101,17 @@ query getUserByID($id: Int!) {
 }
 `;
 
-export const getUserData = selectorFamily<UserData, { userId: number }>({
+export const getUserData = selectorFamily<
+  UserData | null,
+  { userId: string | undefined }
+>({
   key: 'getUserData',
   get:
     ({ userId }) =>
     async () => {
+      if (userId === undefined) {
+        return null;
+      }
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -107,7 +119,7 @@ export const getUserData = selectorFamily<UserData, { userId: number }>({
         },
         body: JSON.stringify({
           query: getUserDataQuery,
-          variables: { id: userId },
+          variables: { id: Number(userId) },
         }),
       });
       const data = await res.json();

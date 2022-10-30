@@ -1,11 +1,19 @@
 import { useRecoilValue } from 'recoil';
+import { useParams } from 'react-router-dom';
 
 import { getEventData } from '../lib';
+import { Loading } from '../components/Loading';
 import { EventOverviewCard } from '../components/EventOverviewCard';
 import { EventDetailCard } from '../components/EventDetailCard';
 
 function EventDetailPage() {
-  const event = useRecoilValue(getEventData({ eventId: 1 }));
+  const { eventId } = useParams();
+  const event = useRecoilValue(getEventData({ eventId }));
+
+  // TODO: throw promise
+  if (event === null) {
+    return <Loading />;
+  }
 
   return (
     <>

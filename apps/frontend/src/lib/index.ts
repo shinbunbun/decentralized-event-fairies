@@ -42,7 +42,8 @@ export const signIn = () => signInWithPopup(auth, provider);
 
 // -----------------------------------------------------------------------------
 
-const API_URL = 'http://localhost:8080/v1/graphql';
+const HASURA_URL = 'http://localhost:8080/v1/graphql';
+const BUNBUN_URL = 'http://localhost:8000';
 
 export interface EventData {
   id: string;
@@ -72,7 +73,7 @@ export const getEventData = selectorFamily<
       if (eventId === undefined) {
         return null;
       }
-      const res = await fetch(API_URL, {
+      const res = await fetch(HASURA_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ mutation createEvent(
 export const createEventData = async (
   variables: Omit<EventData, 'id'>
 ): Promise<number> => {
-  const res = await fetch(API_URL, {
+  const res = await fetch(HASURA_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -127,6 +128,8 @@ export const createEventData = async (
   const data = await res.json();
   return data['data']['createEvent']['id'];
 };
+
+// -----------------------------------------------------------------------------
 
 export interface UserData {
   id: string;
@@ -154,7 +157,7 @@ export const getUserData = selectorFamily<
       if (userId === undefined) {
         return null;
       }
-      const res = await fetch(API_URL, {
+      const res = await fetch(HASURA_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,3 +171,71 @@ export const getUserData = selectorFamily<
       return data['data']['getUser'] as UserData;
     },
 });
+
+// -----------------------------------------------------------------------------
+
+export interface VerifiableCredentials {
+  '@context': string;
+  type: string[];
+  credentialSubject: Record<string, unknown> & { id: string };
+  issuer: string;
+  issuanceDate: string;
+  proof: {
+    type: string;
+    verificationMethod: string;
+    signatureValue: string;
+  };
+}
+
+export const issueVCs = async (
+  user: UserData,
+  event: EventData
+): Promise<VerifiableCredentials> => {
+  const payload = { ...user, ...event };
+  const res = await fetch(BUNBUN_URL + `/issue/${user.id}`, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text()
+  console.log(text);
+  const data = await res.json();
+  return data as VerifiableCredentials;
+};
+
+export const issueVPs = async (
+  user: UserData,
+  vcs: VerifiableCredentials
+): Promise<Record<string, unknown>> => {
+  const payload = {
+    credential_json: JSON.stringify(vcs),
+    did: vcs.credentialSubject.id,
+    challenge: 'challenge',
+    expires: 4128501858,
+  };
+  const res = await fetch(BUNBUN_URL + `/presentation/${user.id}`, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  return data;
+};
+
+export const verify = async (vps: Record<string, unknown>) => {
+  await fetch(BUNBUN_URL + `/verify`, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(vps),
+  });
+  return true;
+};

@@ -12,7 +12,7 @@ use actix_web::{middleware::Logger, App, HttpServer};
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     HttpServer::new(move || App::new().wrap(Logger::default()).configure(router::router))
-        .bind(("localhost", 8080))?
+        .bind(("localhost", 8000))?
         .run()
         .await
 }

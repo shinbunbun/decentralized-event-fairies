@@ -10,10 +10,18 @@ import {
   IconButton,
   Link as ChakraLink,
 } from '@chakra-ui/react';
-import { AddIcon, LinkIcon } from '@chakra-ui/icons';
+import { AddIcon, LinkIcon, AtSignIcon } from '@chakra-ui/icons';
 import { User } from 'firebase/auth';
 
 import { useAuthState, signIn } from '../lib';
+
+function Home() {
+  return (
+    <ChakraLink as={Link} to="/">
+      <IconButton icon={<AtSignIcon />} aria-label="Home" variant="link" />
+    </ChakraLink>
+  );
+}
 
 function SignIn() {
   const [loading, setLoading] = useState(false);
@@ -76,6 +84,7 @@ export function Navbar() {
           <HStack py={2} minH={16}>
             {user === null ? (
               <>
+                <Home />
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
                   <SignIn />
@@ -83,6 +92,7 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <Home />
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
                   <Verify />

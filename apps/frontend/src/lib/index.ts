@@ -96,6 +96,44 @@ export const getEventData = selectorFamily<
     },
 });
 
+const getAllEventsQuery = `
+query getAllEvents {
+  Events {
+    id
+    start
+    thumbnail
+    title
+    end
+    description
+  }
+}
+`;
+
+export const getAllEvents = selectorFamily<EventData[], any>({
+  key: 'getEventData',
+  get: () => async () => {
+    const res = await fetch(HASURA_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: getAllEventsQuery,
+      }),
+    });
+    const data = await res.json();
+    const events: Record<string, any>[] = data['data']['Events'];
+    return events.map((event) => ({
+      id: event['id'],
+      title: event['title'],
+      thumbnail: event['thumbnail'],
+      description: event['description'],
+      start: new Date(event['start']),
+      end: new Date(event['end']),
+    }));
+  },
+});
+
 const createEventDataQuery = `
 mutation createEvent(
   $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!

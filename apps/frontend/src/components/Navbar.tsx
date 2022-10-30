@@ -58,11 +58,12 @@ function Account(props: User) {
   const displayName = props.displayName ? props.displayName : undefined;
   const photoURL = props.photoURL ? props.photoURL : undefined;
 
-  return (
-    <ChakraLink as={Link} to={`/user/${props.uid}`}>
-      <Avatar size="md" name={displayName} src={photoURL} />
-    </ChakraLink>
-  );
+  // return (
+  //   <ChakraLink as={Link} to={`/user/${props.uid}`}>
+  //     <Avatar size="md" name={displayName} src={photoURL} />
+  //   </ChakraLink>
+  // );
+  return <Avatar size="md" name={displayName} src={photoURL} />;
 }
 
 export function Navbar() {

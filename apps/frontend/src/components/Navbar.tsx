@@ -10,7 +10,7 @@ import {
   IconButton,
   Link as ChakraLink,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, LinkIcon } from '@chakra-ui/icons';
 import { User } from 'firebase/auth';
 
 import { useAuthState, signIn } from '../lib';
@@ -38,10 +38,18 @@ function SignIn() {
   );
 }
 
+function Verify() {
+  return (
+    <ChakraLink as={Link} to="/verify">
+      <IconButton icon={<LinkIcon />} aria-label="Verify" />
+    </ChakraLink>
+  );
+}
+
 function CreateEvent() {
   return (
     <ChakraLink as={Link} to="/event/create">
-      <IconButton icon={<AddIcon />} aria-label="Create event" variant="link" />
+      <IconButton icon={<AddIcon />} aria-label="Create event" />
     </ChakraLink>
   );
 }
@@ -76,6 +84,7 @@ export function Navbar() {
               <>
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
+                  <Verify />
                   <CreateEvent />
                   <Account {...user} />
                 </HStack>

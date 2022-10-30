@@ -9,4 +9,5 @@ pub fn router(cfg: &mut web::ServiceConfig) {
         "/presentation/{user_id}",
         web::post().to(handler::presentation::presentation),
     );
+    cfg.route("/verify", web::post().to(handler::verify::verify));
 }

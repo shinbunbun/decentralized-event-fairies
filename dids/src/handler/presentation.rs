@@ -4,6 +4,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
+    error::Error,
     holder::{create_vp, HolderRequest, VerifierRequest},
     issuer::create_holder_account,
 };
@@ -19,7 +20,7 @@ pub struct PresentationRequest {
 pub async fn presentation(
     body: web::Json<PresentationRequest>,
     param: web::Path<String>,
-) -> impl Responder {
+) -> Result<HttpResponse, Error> {
     let user_id = param.clone();
 
     let verifier_request = VerifierRequest {
@@ -33,7 +34,7 @@ pub async fn presentation(
         did: body.did.clone(),
     };
 
-    let presentation = create_vp(&verifier_request, &holder_request).await.unwrap();
+    let presentation = create_vp(&verifier_request, &holder_request).await?;
 
-    HttpResponse::Ok().body(presentation.to_string())
+    Ok(HttpResponse::Ok().body(presentation.to_string()))
 }

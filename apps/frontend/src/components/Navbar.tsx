@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -10,19 +11,29 @@ import {
   Link as ChakraLink,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
+import { User } from 'firebase/auth';
+
+import { useAuthState, signIn } from '../lib';
 
 function SignIn() {
-  return (
-    <Button fontSize="sm" variant="link">
-      Sign In
-    </Button>
-  );
-}
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-function SignUp() {
+  const onClick = async () => {
+    setLoading(true);
+    const result = await signIn();
+    navigate(`/user/${result.user.uid}`);
+    setLoading(false);
+  };
+
   return (
-    <Button fontSize="sm" colorScheme="blue">
-      Sign Up
+    <Button
+      fontSize="sm"
+      colorScheme="blue"
+      isLoading={loading}
+      onClick={onClick}
+    >
+      Sign In
     </Button>
   );
 }
@@ -35,36 +46,38 @@ function CreateEvent() {
   );
 }
 
-function Account() {
+function Account(props: User) {
+  const displayName = props.displayName ? props.displayName : undefined;
+  const photoURL = props.photoURL ? props.photoURL : undefined;
+
   return (
-    <ChakraLink as={Link} to="/user/1">
-      <Avatar size="md" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+    <ChakraLink as={Link} to={`/user/${props.uid}`}>
+      <Avatar size="md" name={displayName} src={photoURL} />
     </ChakraLink>
   );
 }
 
 export function Navbar() {
-  const loggedIn = true;
+  const user = useAuthState();
 
   return (
     <Box as="header" pb={6}>
       <Box as="nav" boxShadow="base" background="white">
         <Container maxW="container.md">
           <HStack py={2} minH={16}>
-            {loggedIn ? (
+            {user === null ? (
               <>
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
-                  <CreateEvent />
-                  <Account />
+                  <SignIn />
                 </HStack>
               </>
             ) : (
               <>
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
-                  <SignIn />
-                  <SignUp />
+                  <CreateEvent />
+                  <Account {...user} />
                 </HStack>
               </>
             )}

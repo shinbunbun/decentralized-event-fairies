@@ -4,6 +4,7 @@ mod holder;
 mod issuer;
 mod router;
 mod utils;
+mod verifier;
 
 use actix_web::{middleware::Logger, App, HttpServer};
 

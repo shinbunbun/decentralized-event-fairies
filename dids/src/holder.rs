@@ -27,13 +27,12 @@ pub async fn create_vp(
 ) -> Result<Presentation, Error> {
     let challenge = &verifier_request.challenge;
 
-    let expires = Timestamp::from_unix(verifier_request.expires).map_err(Error::Core)?;
+    let expires = Timestamp::from_unix(verifier_request.expires)?;
 
-    let credential: Credential =
-        Credential::from_json(&holder_request.credential_json).map_err(Error::Core)?;
+    let credential: Credential = Credential::from_json(&holder_request.credential_json)?;
 
     let mut presentation: Presentation = PresentationBuilder::default()
-        .holder(Url::parse(&holder_request.did).map_err(Error::Core)?)
+        .holder(Url::parse(&holder_request.did)?)
         .credential(credential)
         .build()
         .map_err(Error::Credential)?;
@@ -46,8 +45,7 @@ pub async fn create_vp(
     let mut holder: Account = Account::builder()
         .storage(stronghold)
         .load_identity(IotaDID::from_str(&holder_request.did).unwrap())
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
     holder
         .update_identity()
@@ -55,8 +53,7 @@ pub async fn create_vp(
         .content(MethodContent::GenerateEd25519)
         .fragment("key")
         .apply()
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
     holder
         .sign(
@@ -66,8 +63,7 @@ pub async fn create_vp(
                 .challenge(challenge.to_string())
                 .expires(expires),
         )
-        .await
-        .map_err(Error::Account)?;
+        .await?;
 
     Ok(presentation)
 }

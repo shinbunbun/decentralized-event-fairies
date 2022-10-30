@@ -5,20 +5,23 @@ use actix_web::{
 use identity_iota::core::FromJson;
 use serde_json::Value;
 
-use crate::issuer::{create_holder_account, issue_vc};
+use crate::{
+    error::Error,
+    issuer::{create_holder_account, issue_vc},
+};
 
-pub async fn issue(req: String, param: Path<String>) -> impl Responder {
+pub async fn issue(req: String, param: Path<String>) -> Result<HttpResponse, Error> {
     let user_id = param.clone();
 
-    let holder = create_holder_account(&user_id).await.unwrap();
+    let holder = create_holder_account(&user_id).await?;
 
-    let mut subject_value = Value::from_json(&req).unwrap();
+    let mut subject_value = Value::from_json(&req)?;
 
     subject_value["id"] = Value::String(holder.did().to_string());
 
     let credential_type = "EventJoinProofCredential";
 
-    let credential = issue_vc(subject_value, credential_type).await.unwrap();
+    let credential = issue_vc(subject_value, credential_type).await?;
 
-    HttpResponse::Ok().body(credential.to_string())
+    Ok(HttpResponse::Ok().body(credential.to_string()))
 }

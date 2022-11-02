@@ -10,10 +10,18 @@ import {
   IconButton,
   Link as ChakraLink,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, LinkIcon, AtSignIcon } from '@chakra-ui/icons';
 import { User } from 'firebase/auth';
 
 import { useAuthState, signIn } from '../lib';
+
+function Home() {
+  return (
+    <ChakraLink as={Link} to="/">
+      <IconButton icon={<AtSignIcon />} aria-label="Home" variant="link" />
+    </ChakraLink>
+  );
+}
 
 function SignIn() {
   const [loading, setLoading] = useState(false);
@@ -22,7 +30,7 @@ function SignIn() {
   const onClick = async () => {
     setLoading(true);
     const result = await signIn();
-    navigate(`/user/${result.user.uid}`);
+    // navigate(`/user/${result.user.uid}`);
     setLoading(false);
   };
 
@@ -38,10 +46,18 @@ function SignIn() {
   );
 }
 
+function Verify() {
+  return (
+    <ChakraLink as={Link} to="/verify">
+      <IconButton icon={<LinkIcon />} aria-label="Verify" />
+    </ChakraLink>
+  );
+}
+
 function CreateEvent() {
   return (
     <ChakraLink as={Link} to="/event/create">
-      <IconButton icon={<AddIcon />} aria-label="Create event" variant="link" />
+      <IconButton icon={<AddIcon />} aria-label="Create event" />
     </ChakraLink>
   );
 }
@@ -50,11 +66,12 @@ function Account(props: User) {
   const displayName = props.displayName ? props.displayName : undefined;
   const photoURL = props.photoURL ? props.photoURL : undefined;
 
-  return (
-    <ChakraLink as={Link} to={`/user/${props.uid}`}>
-      <Avatar size="md" name={displayName} src={photoURL} />
-    </ChakraLink>
-  );
+  // return (
+  //   <ChakraLink as={Link} to={`/user/${props.uid}`}>
+  //     <Avatar size="md" name={displayName} src={photoURL} />
+  //   </ChakraLink>
+  // );
+  return <Avatar size="md" name={displayName} src={photoURL} />;
 }
 
 export function Navbar() {
@@ -67,6 +84,7 @@ export function Navbar() {
           <HStack py={2} minH={16}>
             {user === null ? (
               <>
+                <Home />
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
                   <SignIn />
@@ -74,8 +92,10 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <Home />
                 <Spacer />
                 <HStack justify="flex-end" spacing={6}>
+                  <Verify />
                   <CreateEvent />
                   <Account {...user} />
                 </HStack>

@@ -20,9 +20,11 @@ function EventListItem(props: EventData) {
     <Box width="100%" px={4}>
       <HStack spacing={6}>
         <Text fontWeight="semibold">{formatDate(props.start, format)}</Text>
-        <AspectRatio w="96px" ratio={3 / 2}>
-          <Image src={props.thumbnail} alt="thumbnail" borderRadius="md" />
-        </AspectRatio>
+        {props.thumbnail && (
+          <AspectRatio w="96px" ratio={3 / 2}>
+            <Image src={props.thumbnail} alt="thumbnail" borderRadius="md" />
+          </AspectRatio>
+        )}
         <ChakraLink as={Link} to={`/event/${props.id}`}>
           <Text fontSize="lg" as="u" fontWeight="semibold">
             {props.title}

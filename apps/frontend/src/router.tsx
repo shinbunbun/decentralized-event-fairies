@@ -3,16 +3,22 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { Layout } from './components/Layout';
 
+const HomePage = lazy(() => import('./pages/HomePage'));
 const EventCreatePage = lazy(() => import('./pages/EventCreatePage'));
 const EventDetailPage = lazy(() => import('./pages/EventDetailPage'));
 const EventUpdatePage = lazy(() => import('./pages/EventUpdatePage'));
 const UserProfilePage = lazy(() => import('./pages/UserProfilePage'));
+const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
     children: [
+      {
+        path: '',
+        element: <HomePage />,
+      },
       {
         path: 'event/create',
         element: <EventCreatePage />,
@@ -28,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'user/:userId',
         element: <UserProfilePage />,
+      },
+      {
+        path: 'verify',
+        element: <VerifyPage />,
       },
     ],
   },

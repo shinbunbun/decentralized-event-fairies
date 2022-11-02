@@ -1,5 +1,6 @@
 import * as identity from "@iota/identity-wasm/web";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import fileDownload from "js-file-download";
 
 /* export class MemoryStorage implements identity.Storage {
 
@@ -7,6 +8,14 @@ import { useEffect } from "react";
 
 const initIdentity = async () => {
   await identity.init();
+}
+
+const createKeyPair = async () => {
+  const key = new identity.KeyPair(identity.KeyType.Ed25519);
+  const json = JSON.stringify(key.toJSON());
+  const blob = new Blob([json], { type: "application/json" });
+
+  fileDownload(blob, "key.json");
 }
 
 const createDID = async (key_json: String) => {
@@ -26,13 +35,21 @@ const createDID = async (key_json: String) => {
 
 
 function DIDTestPage() {
+  // const [text, setText] = useState("");
   useEffect(() => {
     initIdentity();
   }, []);
+  /* const onClick = async () => {
+    const text = await createKeyPair();
+    setText(text);
+  } */
 
   return <div>
     <h1>Hello World</h1>
     {/* <button onClick={() => createDID()}>CreateDID</button> */}
+    {/* <button onClick={() => onClick()}>createKeyPair</button>
+    <p>{text}</p> */}
+    <button onClick={() => createKeyPair()}>createKeyPair</button>
   </div>;
 }
 

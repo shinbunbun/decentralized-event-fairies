@@ -5,9 +5,11 @@ import { useEffect } from "react";
 
 } */
 
-const createDID = async (key_json: String) => {
-  await identity.init()
+const initIdentity = async () => {
+  await identity.init();
+}
 
+const createDID = async (key_json: String) => {
   const client = new identity.Client();
 
   const key = identity.KeyPair.fromJSON(key_json);
@@ -24,6 +26,10 @@ const createDID = async (key_json: String) => {
 
 
 function DIDTestPage() {
+  useEffect(() => {
+    initIdentity();
+  }, []);
+
   return <div>
     <h1>Hello World</h1>
     {/* <button onClick={() => createDID()}>CreateDID</button> */}

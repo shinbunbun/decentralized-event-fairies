@@ -1,5 +1,5 @@
 import * as identity from "@iota/identity-wasm/web";
-import { useEffect, useState } from "react";
+import { ChangeEventHandler, useEffect, useState } from "react";
 import fileDownload from "js-file-download";
 
 /* export class MemoryStorage implements identity.Storage {
@@ -29,27 +29,46 @@ const createDID = async (key_json: String) => {
 
   await client.publishDocument(doc);
 
-  return doc.id.toString()
-
+  return doc.id().toString();
 }
 
 
 function DIDTestPage() {
   // const [text, setText] = useState("");
+  const [key_json, setKeyJson] = useState("");
+  const [did, setDid] = useState("");
+
   useEffect(() => {
     initIdentity();
   }, []);
-  /* const onClick = async () => {
-    const text = await createKeyPair();
-    setText(text);
-  } */
+  const handleKeyJsonChange: ChangeEventHandler<HTMLInputElement> = async (event) => {
+    const file = await event.target.files?.item(0)?.text();
+    if (!file) {
+      return;
+    }
+    setKeyJson(JSON.parse(file));
+  };
+
+  const handleCreateDID = async () => {
+    const did = await createDID(key_json);
+    setDid(did);
+  }
 
   return <div>
     <h1>Hello World</h1>
-    {/* <button onClick={() => createDID()}>CreateDID</button> */}
+    <br />
+    <button onClick={() => handleCreateDID()}>CreateDID</button>
+    <br />
     {/* <button onClick={() => onClick()}>createKeyPair</button>
     <p>{text}</p> */}
     <button onClick={() => createKeyPair()}>createKeyPair</button>
+    <br />
+    <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
+    <br />
+    <p>{JSON.stringify(key_json)}</p>
+    <br />
+    <p>{did}</p>
+
   </div>;
 }
 

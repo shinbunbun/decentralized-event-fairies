@@ -11,13 +11,13 @@ use crate::{
 };
 
 pub async fn issue(req: String, param: Path<String>) -> Result<HttpResponse, Error> {
-    let user_id = param.clone();
+    // let user_id = param.clone();
 
-    let holder = create_holder_account(&user_id).await?;
+    // let holder = create_holder_account(&user_id).await?;
 
-    let mut subject_value = Value::from_json(&req)?;
+    let subject_value = Value::from_json(&req)?;
 
-    subject_value["id"] = Value::String(holder.did().to_string());
+    // subject_value["id"] = Value::String(holder.did().to_string());
 
     let credential_type = "EventJoinProofCredential";
 

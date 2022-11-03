@@ -10,11 +10,13 @@ const initIdentity = async () => {
   await identity.init();
 }
 
-const createKeyPair = async () => {
+const createKeyPair = () => {
   const key = new identity.KeyPair(identity.KeyType.Ed25519);
-  const json = JSON.stringify(key.toJSON());
-  const blob = new Blob([json], { type: "application/json" });
+  return key.toJSON();
+}
 
+const saveKey = (keyJson: string) => {
+  const blob = new Blob([keyJson], { type: "application/json" });
   fileDownload(blob, "key.json");
 }
 
@@ -86,15 +88,21 @@ const verify = async (vp_json: string, challenge: string) => {
 
 function DIDTestPage() {
   // const [text, setText] = useState("");
-  const [key_json, setKeyJson] = useState("");
-  const [vc_json, setVCJson] = useState("");
+  const [keyJson, setKeyJson] = useState("");
+  const [vcJson, setVCJson] = useState("");
   const [doc, setDoc] = useState<identity.Document>();
-  const [vp_json, setVPJson] = useState("");
+  const [vpJson, setVPJson] = useState("");
   const [isVerify, setIsVerify] = useState(false);
 
   useEffect(() => {
     initIdentity();
   }, []);
+
+  const handleCreateKeyPair = () => {
+    const key = createKeyPair();
+    setKeyJson(key);
+  }
+
   const handleKeyJsonChange: ChangeEventHandler<HTMLInputElement> = async (event) => {
     const file = await event.target.files?.item(0)?.text();
     if (!file) {
@@ -112,44 +120,59 @@ function DIDTestPage() {
   };
 
   const handleCreateDID = async () => {
-    const doc = await createDID(key_json);
+    const doc = await createDID(keyJson);
     setDoc(doc);
   }
 
   const handleCreateVP = async () => {
-    const vp = await createVP(key_json, vc_json, "challenge");
+    const vp = await createVP(keyJson, vcJson, "challenge");
     setVPJson(vp.toJSON());
   }
 
   const handleVerify = async () => {
-    const isVerify = await verify(vp_json, "challenge");
+    const isVerify = await verify(vpJson, "challenge");
     setIsVerify(isVerify);
   }
 
   return <div>
-    <h1>Hello World</h1>
+    <p>1. 鍵を生成します</p>
+    <button onClick={() => handleCreateKeyPair()}>鍵を生成</button>
     <br />
-    <button onClick={() => handleCreateDID()}>CreateDID</button>
+    <button onClick={() => saveKey(keyJson)}>鍵をローカルに保存</button>
     <br />
-    {/* <button onClick={() => onClick()}>createKeyPair</button>
-    <p>{text}</p> */}
-    <button onClick={() => createKeyPair()}>createKeyPair</button>
     <br />
-    <button onClick={() => handleCreateVP()}>createVP</button>
-    <br />
-    <button onClick={()=>handleVerify()}>verify</button>
-    <p>鍵: </p>
+
+    <p>or 1. 生成した鍵を読み込みます</p>
     <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
-    <p>Verifiable Credential: </p>
+    <br />
+    <br />
+
+    <p>2. DIDを発行します</p>
+    <button onClick={() => handleCreateDID()}>DIDを発行</button>
+    <p>DID: {doc?.id().toString()}</p>
+    <br />
+    <br />
+
+    <p>3. VCを発行します</p>
+    <br />
+    <br />
+    
+    <p>or 3. VCを読み込みます</p>
     <input type="file" accept="application/json" onChange={handleVerifiableCredential} />
     <br />
-    <p>{JSON.stringify(key_json)}</p>
     <br />
-    <p>{JSON.stringify(doc?.toJSON())}</p>
+
+    <p>4. VPを発行します</p>
+    <button onClick={() => handleCreateVP()}>createVP</button>
+    <p>VP: {JSON.stringify(vpJson)}</p>
     <br />
-    <p>{JSON.stringify(vp_json)}</p>
     <br />
-    <p>verify: {isVerify.toString()}</p>
+
+    <p>5. VPを検証します</p>
+    <button onClick={()=>handleVerify()}>verify</button>
+    <p>検証ステータス: {isVerify.toString()}</p>
+    <br />
+    <br />
 
   </div>;
 }

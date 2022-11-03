@@ -54,16 +54,34 @@ const createVP = async (key_json: string, vc_json: string, challenge: string) =>
 
 }
 
-/* const verify = async (vp_json: string) => {
+const verify = async (vp_json: string, challenge: string) => {
   const vp = identity.Presentation.fromJSON(vp_json);
-  const client = new identity.Client();
-  const did = vp.holder();
-  if (!did) {
-    throw new Error("No DID found in presentation");
+
+  const presentationVerifierOptions = new identity.VerifierOptions({
+    challenge,
+  })
+
+  const subjectHolderRelationship = identity.SubjectHolderRelationship.AlwaysSubject;
+
+  const presentationValidationOptions = new identity.PresentationValidationOptions({
+    presentationVerifierOptions: presentationVerifierOptions,
+    subjectHolderRelationship: subjectHolderRelationship,
+  })
+
+  const resolver = new identity.Resolver()
+
+  try{
+    await resolver.verifyPresentation(
+      vp,
+      presentationValidationOptions,
+      identity.FailFast.FirstError
+    )
+    return true;
+  } catch(e) {
+    console.log(e);
+    return false;
   }
-  const doc = identity.Document.fromJSON(await client.resolve(did));
-  return ;
-} */
+}
 
 
 function DIDTestPage() {
@@ -72,6 +90,7 @@ function DIDTestPage() {
   const [vc_json, setVCJson] = useState("");
   const [doc, setDoc] = useState<identity.Document>();
   const [vp_json, setVPJson] = useState("");
+  const [isVerify, setIsVerify] = useState(false);
 
   useEffect(() => {
     initIdentity();
@@ -99,7 +118,12 @@ function DIDTestPage() {
 
   const handleCreateVP = async () => {
     const vp = await createVP(key_json, vc_json, "challenge");
-    setVPJson(JSON.stringify(vp.toJSON()));
+    setVPJson(vp.toJSON());
+  }
+
+  const handleVerify = async () => {
+    const isVerify = await verify(vp_json, "challenge");
+    setIsVerify(isVerify);
   }
 
   return <div>
@@ -113,6 +137,7 @@ function DIDTestPage() {
     <br />
     <button onClick={() => handleCreateVP()}>createVP</button>
     <br />
+    <button onClick={()=>handleVerify()}>verify</button>
     <p>鍵: </p>
     <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
     <p>Verifiable Credential: </p>
@@ -122,7 +147,9 @@ function DIDTestPage() {
     <br />
     <p>{JSON.stringify(doc?.toJSON())}</p>
     <br />
-    <p>{vp_json}</p>
+    <p>{JSON.stringify(vp_json)}</p>
+    <br />
+    <p>verify: {isVerify.toString()}</p>
 
   </div>;
 }

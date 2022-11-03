@@ -1,10 +1,13 @@
 import * as identity from "@iota/identity-wasm/web";
 import { ChangeEventHandler, useEffect, useState } from "react";
 import fileDownload from "js-file-download";
+import axios from "axios";
 
 /* export class MemoryStorage implements identity.Storage {
 
 } */
+
+const RUST_SERVER_URL = "http://localhost:8000";
 
 const initIdentity = async () => {
   await identity.init();
@@ -32,6 +35,16 @@ const createDID = async (key_json: string) => {
   await client.publishDocument(doc);
 
   return doc;
+}
+
+const createVC = async (subject_json: string) => {
+  try {
+    const res = await axios.post(`${RUST_SERVER_URL}/issue`, subject_json);
+    return res.data;
+  } catch (e) {
+    console.error(e);
+    throw new Error("Failed to create VC");
+  }
 }
 
 const createVP = async (key_json: string, vc_json: string, challenge: string) => {
@@ -72,14 +85,14 @@ const verify = async (vp_json: string, challenge: string) => {
 
   const resolver = new identity.Resolver()
 
-  try{
+  try {
     await resolver.verifyPresentation(
       vp,
       presentationValidationOptions,
       identity.FailFast.FirstError
     )
     return true;
-  } catch(e) {
+  } catch (e) {
     console.log(e);
     return false;
   }
@@ -124,6 +137,15 @@ function DIDTestPage() {
     setDoc(doc);
   }
 
+  const handleCreateVC = async () => {
+    const subject = JSON.stringify({
+      id: doc?.id(),
+      name: "John Doe",
+    });
+    const vc = await createVC(subject);
+    setVCJson(vc);
+  };
+
   const handleCreateVP = async () => {
     const vp = await createVP(keyJson, vcJson, "challenge");
     setVPJson(vp.toJSON());
@@ -154,11 +176,13 @@ function DIDTestPage() {
     <br />
 
     <p>3. VCを発行します</p>
+    <button onClick={() => handleCreateVC()}>VCを発行</button>
     <br />
     <br />
-    
+
     <p>or 3. VCを読み込みます</p>
     <input type="file" accept="application/json" onChange={handleVerifiableCredential} />
+    <p>VC: {JSON.stringify(vcJson)}</p>
     <br />
     <br />
 
@@ -169,7 +193,7 @@ function DIDTestPage() {
     <br />
 
     <p>5. VPを検証します</p>
-    <button onClick={()=>handleVerify()}>verify</button>
+    <button onClick={() => handleVerify()}>verify</button>
     <p>検証ステータス: {isVerify.toString()}</p>
     <br />
     <br />

@@ -50,7 +50,7 @@ const createVP = async (key_json: string, vc_json: string) => {
 
   const signedVP = doc.signPresentation(unsignedVP, key.private(), "#sign-0", identity.ProofOptions.default());
 
-  console.log(signedVP.toJSON());
+  return signedVP;
 
 }
 
@@ -60,6 +60,7 @@ function DIDTestPage() {
   const [key_json, setKeyJson] = useState("");
   const [vc_json, setVCJson] = useState("");
   const [doc, setDoc] = useState<identity.Document>();
+  const [vp_json, setVPJson] = useState("");
 
   useEffect(() => {
     initIdentity();
@@ -85,6 +86,11 @@ function DIDTestPage() {
     setDoc(doc);
   }
 
+  const handleCreateVP = async () => {
+    const vp = await createVP(key_json, vc_json);
+    setVPJson(JSON.stringify(vp.toJSON()));
+  }
+
   return <div>
     <h1>Hello World</h1>
     <br />
@@ -94,7 +100,7 @@ function DIDTestPage() {
     <p>{text}</p> */}
     <button onClick={() => createKeyPair()}>createKeyPair</button>
     <br />
-    <button onClick={()=>createVP(key_json, vc_json)}>createVP</button>
+    <button onClick={()=>handleCreateVP()}>createVP</button>
     <br />
     <p>鍵: </p>
     <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
@@ -104,6 +110,8 @@ function DIDTestPage() {
     <p>{JSON.stringify(key_json)}</p>
     <br />
     <p>{JSON.stringify(doc?.toJSON())}</p>
+    <br />
+    <p>{vp_json}</p>
 
   </div>;
 }

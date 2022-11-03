@@ -2,6 +2,7 @@ import * as identity from "@iota/identity-wasm/web";
 import { ChangeEventHandler, useEffect, useState } from "react";
 import fileDownload from "js-file-download";
 import axios from "axios";
+import { Button, Input } from '@chakra-ui/react'
 
 /* export class MemoryStorage implements identity.Storage {
 
@@ -158,42 +159,42 @@ function DIDTestPage() {
 
   return <div>
     <p>1. 鍵を生成します</p>
-    <button onClick={() => handleCreateKeyPair()}>鍵を生成</button>
+    <Button colorScheme='blue' onClick={() => handleCreateKeyPair()}>鍵を生成</Button>
     <br />
-    <button onClick={() => saveKey(keyJson)}>鍵をローカルに保存</button>
+    <Button colorScheme='blue' onClick={() => saveKey(keyJson)}>鍵をローカルに保存</Button>
     <br />
     <br />
 
     <p>or 1. 生成した鍵を読み込みます</p>
-    <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
+    <Input type="file" accept="application/json" onChange={handleKeyJsonChange} />
     <br />
     <br />
 
     <p>2. DIDを発行します</p>
-    <button onClick={() => handleCreateDID()}>DIDを発行</button>
+    <Button colorScheme='blue' onClick={() => handleCreateDID()}>DIDを発行</Button>
     <p>DID: {doc?.id().toString()}</p>
     <br />
     <br />
 
     <p>3. VCを発行します</p>
-    <button onClick={() => handleCreateVC()}>VCを発行</button>
+    <Button colorScheme='blue' onClick={() => handleCreateVC()}>VCを発行</Button>
     <br />
     <br />
 
     <p>or 3. VCを読み込みます</p>
-    <input type="file" accept="application/json" onChange={handleVerifiableCredential} />
+    <Input type="file" accept="application/json" onChange={handleVerifiableCredential} />
     <p>VC: {JSON.stringify(vcJson)}</p>
     <br />
     <br />
 
     <p>4. VPを発行します</p>
-    <button onClick={() => handleCreateVP()}>createVP</button>
+    <Button colorScheme='blue' onClick={() => handleCreateVP()}>createVP</Button>
     <p>VP: {JSON.stringify(vpJson)}</p>
     <br />
     <br />
 
     <p>5. VPを検証します</p>
-    <button onClick={() => handleVerify()}>verify</button>
+    <Button colorScheme='blue' onClick={() => handleVerify()}>verify</Button>
     <p>検証ステータス: {isVerify.toString()}</p>
     <br />
     <br />

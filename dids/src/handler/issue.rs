@@ -10,7 +10,7 @@ use crate::{
     issuer::{create_holder_account, issue_vc},
 };
 
-pub async fn issue(req: String, param: Path<String>) -> Result<HttpResponse, Error> {
+pub async fn issue(req: String) -> Result<HttpResponse, Error> {
     // let user_id = param.clone();
 
     // let holder = create_holder_account(&user_id).await?;

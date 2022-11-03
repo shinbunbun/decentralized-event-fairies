@@ -18,7 +18,7 @@ const createKeyPair = async () => {
   fileDownload(blob, "key.json");
 }
 
-const createDID = async (key_json: String) => {
+const createDID = async (key_json: string) => {
   const client = new identity.Client();
 
   const key = identity.KeyPair.fromJSON(key_json);
@@ -29,14 +29,37 @@ const createDID = async (key_json: String) => {
 
   await client.publishDocument(doc);
 
-  return doc.id().toString();
+  return doc;
+}
+
+const createVP = async (key_json: string, vc_json: string) => {
+  const client = new identity.Client();
+
+  const vc = identity.Credential.fromJSON(vc_json);
+  const did = vc.credentialSubject()[0].id;
+  if (!did) {
+    throw new Error("No DID found in credential");
+  }
+  const doc = identity.Document.fromJSON(await client.resolve(did));
+  const key = identity.KeyPair.fromJSON(key_json);
+
+  const unsignedVP = new identity.Presentation({
+    holder: doc.id(),
+    verifiableCredential: vc
+  })
+
+  const signedVP = doc.signPresentation(unsignedVP, key.private(), "#sign-0", identity.ProofOptions.default());
+
+  console.log(signedVP.toJSON());
+
 }
 
 
 function DIDTestPage() {
   // const [text, setText] = useState("");
   const [key_json, setKeyJson] = useState("");
-  const [did, setDid] = useState("");
+  const [vc_json, setVCJson] = useState("");
+  const [doc, setDoc] = useState<identity.Document>();
 
   useEffect(() => {
     initIdentity();
@@ -49,9 +72,17 @@ function DIDTestPage() {
     setKeyJson(JSON.parse(file));
   };
 
+  const handleVerifiableCredential: ChangeEventHandler<HTMLInputElement> = async (event) => {
+    const file = await event.target.files?.item(0)?.text();
+    if (!file) {
+      return;
+    }
+    setVCJson(JSON.parse(file));
+  };
+
   const handleCreateDID = async () => {
-    const did = await createDID(key_json);
-    setDid(did);
+    const doc = await createDID(key_json);
+    setDoc(doc);
   }
 
   return <div>
@@ -63,11 +94,16 @@ function DIDTestPage() {
     <p>{text}</p> */}
     <button onClick={() => createKeyPair()}>createKeyPair</button>
     <br />
+    <button onClick={()=>createVP(key_json, vc_json)}>createVP</button>
+    <br />
+    <p>鍵: </p>
     <input type="file" accept="application/json" onChange={handleKeyJsonChange} />
+    <p>Verifiable Credential: </p>
+    <input type="file" accept="application/json" onChange={handleVerifiableCredential} />
     <br />
     <p>{JSON.stringify(key_json)}</p>
     <br />
-    <p>{did}</p>
+    <p>{JSON.stringify(doc?.toJSON())}</p>
 
   </div>;
 }

@@ -32,7 +32,7 @@ const createDID = async (key_json: string) => {
   return doc;
 }
 
-const createVP = async (key_json: string, vc_json: string) => {
+const createVP = async (key_json: string, vc_json: string, challenge: string) => {
   const client = new identity.Client();
 
   const vc = identity.Credential.fromJSON(vc_json);
@@ -48,11 +48,22 @@ const createVP = async (key_json: string, vc_json: string) => {
     verifiableCredential: vc
   })
 
-  const signedVP = doc.signPresentation(unsignedVP, key.private(), "#sign-0", identity.ProofOptions.default());
+  const signedVP = doc.signPresentation(unsignedVP, key.private(), "#sign-0", new identity.ProofOptions({ challenge }));
 
   return signedVP;
 
 }
+
+/* const verify = async (vp_json: string) => {
+  const vp = identity.Presentation.fromJSON(vp_json);
+  const client = new identity.Client();
+  const did = vp.holder();
+  if (!did) {
+    throw new Error("No DID found in presentation");
+  }
+  const doc = identity.Document.fromJSON(await client.resolve(did));
+  return ;
+} */
 
 
 function DIDTestPage() {
@@ -87,7 +98,7 @@ function DIDTestPage() {
   }
 
   const handleCreateVP = async () => {
-    const vp = await createVP(key_json, vc_json);
+    const vp = await createVP(key_json, vc_json, "challenge");
     setVPJson(JSON.stringify(vp.toJSON()));
   }
 
@@ -100,7 +111,7 @@ function DIDTestPage() {
     <p>{text}</p> */}
     <button onClick={() => createKeyPair()}>createKeyPair</button>
     <br />
-    <button onClick={()=>handleCreateVP()}>createVP</button>
+    <button onClick={() => handleCreateVP()}>createVP</button>
     <br />
     <p>鍵: </p>
     <input type="file" accept="application/json" onChange={handleKeyJsonChange} />

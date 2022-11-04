@@ -20,7 +20,7 @@ const createKeyPair = () => {
 }
 
 const saveKey = (keyJson: string) => {
-  const blob = new Blob([keyJson], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(keyJson)], { type: "application/json" });
   fileDownload(blob, "key.json");
 }
 
@@ -38,7 +38,7 @@ const createDID = async (key_json: string) => {
   return doc;
 }
 
-const createVC = async (subject_json: string) => {
+const createVCOnServer = async (subject_json: string) => {
   try {
     const res = await axios.post(`${RUST_SERVER_URL}/issue`, subject_json);
     return res.data;
@@ -46,6 +46,26 @@ const createVC = async (subject_json: string) => {
     console.error(e);
     throw new Error("Failed to create VC");
   }
+}
+
+const createVC = async (issuer_key_json: string, subject_json: string, issuer_doc_json: string) => {
+
+  const issuer_key = identity.KeyPair.fromJSON(issuer_key_json);
+  const issuer_doc = identity.Document.fromJSON(issuer_doc_json);
+
+  const unsignedVc = new identity.Credential({
+    type: 'EventParticipationProofCredential',
+    credentialStatus: {
+      id: issuer_doc.id().toString() + '#sign-0"',
+      type: "EventParticipationProof",
+    },
+    issuer: issuer_doc.id(),
+    credentialSubject: JSON.parse(subject_json),
+  })
+
+  const signedVC = issuer_doc.signCredential(unsignedVc, issuer_key.private(), "#sign-0", identity.ProofOptions.default());
+
+  return signedVC;
 }
 
 const createVP = async (key_json: string, vc_json: string, challenge: string) => {
@@ -143,7 +163,7 @@ function DIDTestPage() {
       id: doc?.id(),
       name: "John Doe",
     });
-    const vc = await createVC(subject);
+    const vc = await createVCOnServer(subject);
     setVCJson(vc);
   };
 

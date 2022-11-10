@@ -1,6 +1,5 @@
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use crate::error::Error;
 
@@ -21,12 +20,21 @@ pub fn create_jwt(claims: Claims, prv_key: &[u8]) -> Result<String, Error> {
     )?)
 }
 
+pub fn verify_jwt(token: &str, pub_key: &[u8]) -> Result<Claims, Error> {
+    Ok(decode::<Claims>(
+        token,
+        &DecodingKey::from_ec_pem(pub_key)?,
+        &Validation::new(Algorithm::ES256),
+    )?
+    .claims)
+}
+
 #[cfg(test)]
 mod test {
     use super::Claims;
 
     #[test]
-    fn test_create_jwt() {
+    fn test_jwt() {
         let unix_time = chrono::Utc::now().timestamp() as usize;
         let claims = Claims {
             aud: "aud".to_string(),
@@ -36,9 +44,14 @@ mod test {
             sub: "sub".to_string(),
         };
         let prv_key = include_bytes!("../test_key/ec_private.pem");
+        let pub_key = include_bytes!("../test_key/ec_public.pem");
 
         let jwt = super::create_jwt(claims, prv_key).unwrap();
 
         println!("{}", jwt);
+
+        let claims = super::verify_jwt(&jwt, pub_key).unwrap();
+
+        println!("{:?}", claims);
     }
 }

@@ -3,7 +3,8 @@
 let
 in pkgs.mkShell {
   buildInputs = with pkgs; [ 
-    rustup
+    cargo
+    rustc
     rustfmt
     clippy 
   ];

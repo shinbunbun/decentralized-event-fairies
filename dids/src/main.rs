@@ -2,6 +2,7 @@ mod error;
 mod handler;
 mod holder;
 mod issuer;
+mod jwt;
 mod router;
 mod utils;
 mod verifier;

@@ -20,6 +20,8 @@ pub enum Error {
     CompoundCredentialValidation(#[from] CompoundCredentialValidationError),
     #[error("Client: {0}")]
     Client(#[from] client::Error),
+    #[error("JsonWebToken: {0}")]
+    JsonWebToken(#[from] jsonwebtoken::errors::Error),
 }
 
 impl ResponseError for Error {
@@ -30,7 +32,8 @@ impl ResponseError for Error {
             | Error::Core(_)
             | Error::Credential(_)
             | Error::CompoundCredentialValidation(_)
-            | Error::Client(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            | Error::Client(_)
+            | Error::JsonWebToken(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 

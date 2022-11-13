@@ -24,5 +24,5 @@ CREATE TABLE IF NOT EXISTS public.user_participant_event(
        id SERIAL PRIMARY KEY,
        user_id TEXT REFERENCES public.users(id) NOT NULL,
        event_id INTEGER REFERENCES public.events(id) NOT NULL,
-       ticket TEXT NULL,
+       ticket TEXT NULL
 );

@@ -101,13 +101,28 @@ query {
   }
 
   async alreadyRegistered(userID: UserID, eventID: EventID): Promise<boolean> {
-    return this.findEventRegistration(userID, eventID) !== undefined;
+    let register = await this.findEventRegistration(userID, eventID);
+    return register !== null;
   }
 
-  async findEventRegistration(userID: UserID, eventID: EventID): Promise<{ id: number, user_id: UserID, event_id: EventID } | undefined> {
-    return this.requestQuery<{ id: number, user_id: UserID, event_id: EventID } | undefined>(
+  async findEventRegistration(userID: UserID, eventID: EventID): Promise<{ id: number, user_id: UserID, event_id: EventID, ticket: string } | null> {
+    let result = await this.requestQuery<{ user_participant_event: [{ id: number, user_id: UserID, event_id: EventID, ticket: string }] }>(
       `
-user_participant_event(where:{user_id:{_eq:\"${userID}\"} event_id:{_eq:${eventID}}}){
+query {
+  user_participant_event(where:{user_id:{_eq:\"${userID}\"} event_id:{_eq:${eventID}}}){
+      id
+      user_id
+      event_id
+      ticket
+  }
+}
+`)
+    if (result.user_participant_event.length != 1){
+      return null;
+    }
+    return result.user_participant_event[0];
+  }
+
     id
     user_id
     event_id

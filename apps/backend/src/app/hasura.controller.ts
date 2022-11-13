@@ -7,6 +7,7 @@ const axios = require('axios');
 
 type Input<T> = { input: T };
 type RegisterInput = Input<{ userID: UserID; eventID: EventID }>;
+type setRegisterEventTicketInput = Input<{ userID: UserID; eventID: EventID; ticket: string }>;
 
 type UserID = string;
 type EventID = number;
@@ -15,25 +16,10 @@ type EventID = number;
 export class HasuraController {
   constructor(private readonly appService: AppService) {}
 
-  @Post('/hasura')
-  async getData(@Body() body: Input<{ n: number }>): Promise<number> {
-    let { input } = body;
-    let { n } = input;
-
-    await this.requestQuery<{ Events: { id: EventID } }>(
-      `query { Events { id } }`
-    ).then((res) => {
-      console.log(res, 'desu!!!!!!!!!!!!!');
-    });
-
-    return n * 2;
-  }
-
   @Post('/hasura/event/register')
   async registerEvent(
     @Body() body: RegisterInput
   ): Promise<{ registeredEventID: number }> {
-    console.log(body);
 
     let { input } = body;
     let { userID, eventID } = input;
@@ -48,7 +34,7 @@ export class HasuraController {
         registeredEventID: null,
       };
     }
-    if (!(await this.alreadyRegistered(userID, eventID))) {
+    if (await this.alreadyRegistered(userID, eventID)) {
       return {
         registeredEventID: eventID,
       };
@@ -59,7 +45,7 @@ export class HasuraController {
     }>(
       `
 mutation {
-  insert_user_participant_event_one(object:{user_id:${userID} event_id:${eventID}}){
+  insert_user_participant_event_one(object:{user_id:\"${userID}\" event_id:${eventID}}){
     id
   }
 }
@@ -80,7 +66,7 @@ mutation {
     return this.requestQuery<{ getUser: any }>(
       `
 query {
-  getUser(id:${id}) {
+  getUser(id:"${id}") {
     id
   }
 }
@@ -101,11 +87,61 @@ query {
   }
 
   async alreadyRegistered(userID: UserID, eventID: EventID): Promise<boolean> {
-    let registers = await this.registeredLists();
-    return (
-      registers.find((x) => x.event_id == eventID && x.user_id == userID) !=
-      null
-    );
+    let register = await this.findEventRegistration(userID, eventID);
+    return register !== null;
+  }
+
+  async findEventRegistration(userID: UserID, eventID: EventID): Promise<{ id: number, user_id: UserID, event_id: EventID, ticket: string } | null> {
+    let result = await this.requestQuery<{ user_participant_event: [{ id: number, user_id: UserID, event_id: EventID, ticket: string }] }>(
+      `
+query {
+  user_participant_event(where:{user_id:{_eq:\"${userID}\"} event_id:{_eq:${eventID}}}){
+      id
+      user_id
+      event_id
+      ticket
+  }
+}
+`)
+    if (result.user_participant_event.length != 1) {
+      return null;
+    }
+    return result.user_participant_event[0];
+  }
+
+  async setRegisterEventTicket(userID: UserID, eventID: EventID, ticket: string): Promise<number | null> {
+    let register = await this.findEventRegistration(userID, eventID);
+    if (register === null) {
+      return null;
+    }
+    let register_id = register.id;
+    let result = await this.requestMutation<{ update_user_participant_event_by_pk: { id: number } | null }>(
+      `
+mutation {
+  update_user_participant_event_by_pk(pk_columns: {id: ${register_id}} _set:{ticket:\"${ticket}\"}){
+    id
+  }
+}
+`);
+    if (result.update_user_participant_event_by_pk === null) {
+      return null
+    }
+    return result.update_user_participant_event_by_pk.id
+  }
+
+
+  @Post('/hasura/event/set_register_ticket')
+  async SetRegisterEventTicket(
+    @Body() body: setRegisterEventTicketInput
+  ): Promise<{
+    registration_id: number | null
+  }> {
+    let { input } = body;
+    let { userID, eventID, ticket } = input;
+    let result = await this.setRegisterEventTicket(userID, eventID, ticket);
+    return {
+      registration_id: result
+    };
   }
 
   async registeredLists(): Promise<

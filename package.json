@@ -60,6 +60,7 @@
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "@sphereon/did-auth-siop": "github:2shiori17/SIOP-OID4VP#iota",
     "axios": "^1.1.3",
     "core-js": "^3.6.5",
     "date-fns": "^2.29.3",

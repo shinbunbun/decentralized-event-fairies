@@ -34,7 +34,6 @@ export class HasuraController {
   async registerEvent(
     @Body() body: RegisterInput
   ): Promise<{ registeredEventID: number }> {
-    console.log(body);
 
     let { input } = body;
     let { userID, eventID } = input;

@@ -22,6 +22,15 @@ curl -X POST localhost:8080/v1/metadata \
                         "type": "Int"
                     }
                 ]
+            },
+            {
+                "name": "SetRegisterEventTicketOutput",
+                "fields": [
+                    {
+                        "name": "registration_id",
+                        "type": "Int"
+                    }
+                ]
             }
         ]
     }
@@ -97,6 +106,43 @@ curl -X POST localhost:8080/v1/metadata \
             ],
             "output_type":"RegisterEventOutput!",
             "handler":"{{ACTION_BASE_URL}}/event/register",
+            "timeout":60
+        }
+    }
+}
+'
+echo
+echo
+echo
+
+echo '####' define register action handler
+curl -X POST localhost:8080/v1/metadata \
+    -H 'Content-Type: application/json' \
+    -H 'X-Hasura-Role: admin' \
+    -d '
+{
+    "type":"create_action",
+    "args":{
+        "name":"setRegisterEventTicket",
+        "definition":{
+            "kind":"synchronous",
+            "type":"mutation",
+            "arguments":[
+                {
+                    "name":"userID",
+                    "type":"String!"
+                },
+                {
+                    "name":"eventID",
+                    "type":"ID!"
+                },
+                {
+                    "name":"ticket",
+                    "type":"String!"
+                }
+            ],
+            "output_type":"SetRegisterEventTicketOutput",
+            "handler":"{{ACTION_BASE_URL}}/event/set_register_ticket",
             "timeout":60
         }
     }

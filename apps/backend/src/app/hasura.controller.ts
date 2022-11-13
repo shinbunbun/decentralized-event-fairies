@@ -48,7 +48,7 @@ export class HasuraController {
         registeredEventID: null,
       };
     }
-    if (!(await this.alreadyRegistered(userID, eventID))) {
+    if (await this.alreadyRegistered(userID, eventID)) {
       return {
         registeredEventID: eventID,
       };
@@ -59,7 +59,7 @@ export class HasuraController {
     }>(
       `
 mutation {
-  insert_user_participant_event_one(object:{user_id:${userID} event_id:${eventID}}){
+  insert_user_participant_event_one(object:{user_id:\"${userID}\" event_id:${eventID}}){
     id
   }
 }
@@ -80,7 +80,7 @@ mutation {
     return this.requestQuery<{ getUser: any }>(
       `
 query {
-  getUser(id:${id}) {
+  getUser(id:"${id}") {
     id
   }
 }
@@ -102,10 +102,7 @@ query {
 
   async alreadyRegistered(userID: UserID, eventID: EventID): Promise<boolean> {
     let registers = await this.registeredLists();
-    return (
-      registers.find((x) => x.event_id == eventID && x.user_id == userID) !=
-      null
-    );
+    return registers.some((x) => x.event_id == eventID && x.user_id == userID);
   }
 
   async registeredLists(): Promise<

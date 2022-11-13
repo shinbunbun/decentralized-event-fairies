@@ -101,8 +101,12 @@ query {
   }
 
   async alreadyRegistered(userID: UserID, eventID: EventID): Promise<boolean> {
+    return this.findEventRegistration(userID, eventID) !== undefined;
+  }
+
+  async findEventRegistration(userID: UserID, eventID: EventID): Promise<{ id: number, user_id: UserID, event_id: EventID }> {
     let registers = await this.registeredLists();
-    return registers.some((x) => x.event_id == eventID && x.user_id == userID);
+    return registers.find((x) => x.event_id == eventID && x.user_id == userID);
   }
 
   async registeredLists(): Promise<

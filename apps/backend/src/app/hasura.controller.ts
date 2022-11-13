@@ -16,20 +16,6 @@ type EventID = number;
 export class HasuraController {
   constructor(private readonly appService: AppService) {}
 
-  @Post('/hasura')
-  async getData(@Body() body: Input<{ n: number }>): Promise<number> {
-    let { input } = body;
-    let { n } = input;
-
-    await this.requestQuery<{ Events: { id: EventID } }>(
-      `query { Events { id } }`
-    ).then((res) => {
-      console.log(res, 'desu!!!!!!!!!!!!!');
-    });
-
-    return n * 2;
-  }
-
   @Post('/hasura/event/register')
   async registerEvent(
     @Body() body: RegisterInput

@@ -43,7 +43,7 @@ export const createVC = async (
 };
 
 export const createVP = async (
-  key_json: string,
+  private_key: Uint8Array,
   vc_json: string,
   challenge: string
 ) => {
@@ -55,7 +55,6 @@ export const createVP = async (
     throw new Error('No DID found in credential');
   }
   const doc = identity.Document.fromJSON(await client.resolve(did));
-  const key = identity.KeyPair.fromJSON(key_json);
 
   const unsignedVP = new identity.Presentation({
     holder: doc.id(),
@@ -64,7 +63,7 @@ export const createVP = async (
 
   const signedVP = doc.signPresentation(
     unsignedVP,
-    key.private(),
+    private_key,
     '#sign-0',
     new identity.ProofOptions({ challenge })
   );

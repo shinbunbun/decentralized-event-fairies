@@ -6,8 +6,13 @@ import {
   FormControl,
   FormLabel,
   Button,
-  Divider,
+  Code,
   Heading,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { EventData, useAuthValue } from '../lib';
 import * as identity from '@iota/identity-wasm/web';
@@ -27,10 +32,6 @@ const createVC = async (
 
   const unsignedVc = new identity.Credential({
     type: 'EventParticipationProofCredential',
-    credentialStatus: {
-      id: issuer_doc.id().toString() + '#sign-0"',
-      type: 'EventParticipationProof',
-    },
     issuer: issuer_doc.id(),
     credentialSubject: JSON.parse(subject_json),
   });
@@ -74,40 +75,10 @@ const createVP = async (
   return signedVP;
 };
 
-const verify = async (vp_json: string, challenge: string) => {
-  const vp = identity.Presentation.fromJSON(vp_json);
-
-  const presentationVerifierOptions = new identity.VerifierOptions({
-    challenge,
-  });
-
-  const subjectHolderRelationship =
-    identity.SubjectHolderRelationship.AlwaysSubject;
-
-  const presentationValidationOptions =
-    new identity.PresentationValidationOptions({
-      presentationVerifierOptions: presentationVerifierOptions,
-      subjectHolderRelationship: subjectHolderRelationship,
-    });
-
-  const resolver = new identity.Resolver();
-
-  try {
-    await resolver.verifyPresentation(
-      vp,
-      presentationValidationOptions,
-      identity.FailFast.FirstError
-    );
-    return true;
-  } catch (e) {
-    console.log(e);
-    return false;
-  }
-};
-
 export function EventConfirmCard(props: EventData) {
   const [myPrivateKey, setMyPrivateKey] = useState('');
   const [targetDID, setTargetDID] = useState('');
+  const [vp, setVP] = useState('');
   const [loading, setLoading] = useState(false);
   const auth = useAuthValue();
 
@@ -130,8 +101,7 @@ export function EventConfirmCard(props: EventData) {
       const vp = await createVP(privateKey, vc.toJSON(), 'challenge');
       console.log(vp.toJSON());
 
-      const x = await verify(vp.toJSON(), 'challenge');
-      console.log(x);
+      setVP(JSON.stringify(vp.toJSON(), null, 2));
 
       setLoading(false);
     }
@@ -149,8 +119,6 @@ export function EventConfirmCard(props: EventData) {
         >
           <VStack spacing={6}>
             <Heading size="sm">参加証明の発行</Heading>
-
-            <Divider />
 
             <FormControl>
               <FormLabel>自分の秘密鍵</FormLabel>
@@ -177,6 +145,31 @@ export function EventConfirmCard(props: EventData) {
             >
               発行
             </Button>
+
+            {vp && (
+              <Accordion defaultIndex={[0]} allowMultiple width="100%">
+                <AccordionItem>
+                  <h2>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left">
+                        Verifiable Presentation
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    <Code
+                      display="block"
+                      whiteSpace="pre"
+                      overflow="scroll"
+                      padding={2}
+                    >
+                      {vp}
+                    </Code>
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+            )}
           </VStack>
         </Box>
       </Box>

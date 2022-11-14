@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as identity from '@iota/identity-wasm/web';
 import {
   Box,
   Textarea,
@@ -11,24 +12,60 @@ import {
   useToast,
 } from '@chakra-ui/react';
 
-import { verify } from '../lib';
+const verify = async (vp_json: string, challenge: string) => {
+  const vp = identity.Presentation.fromJSON(JSON.parse(vp_json));
+
+  const presentationVerifierOptions = new identity.VerifierOptions({
+    challenge,
+  });
+
+  const subjectHolderRelationship =
+    identity.SubjectHolderRelationship.AlwaysSubject;
+
+  const presentationValidationOptions =
+    new identity.PresentationValidationOptions({
+      presentationVerifierOptions: presentationVerifierOptions,
+      subjectHolderRelationship: subjectHolderRelationship,
+    });
+
+  const resolver = new identity.Resolver();
+
+  try {
+    await resolver.verifyPresentation(
+      vp,
+      presentationValidationOptions,
+      identity.FailFast.FirstError
+    );
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+};
 
 function VerifyPage() {
   const toast = useToast();
-  const [vps, setVPs] = useState('');
+  const [vp, setVP] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onClick = async () => {
     setLoading(true);
+    await identity.init();
+    console.log(JSON.parse(vp));
     try {
-      await verify(vps);
-      toast({
-        title: '検証成功!',
-        status: 'success',
-        duration: 9000,
-        isClosable: true,
-      });
-    } catch {
+      const result = await verify(vp, 'challenge');
+      if (result) {
+        toast({
+          title: '検証成功!',
+          status: 'success',
+          duration: 9000,
+          isClosable: true,
+        });
+      } else {
+        throw new Error('検証失敗');
+      }
+    } catch (err) {
+      console.log(err);
       toast({
         title: '検証失敗!',
         status: 'error',
@@ -49,11 +86,11 @@ function VerifyPage() {
         background="white"
       >
         <VStack spacing={4}>
-          <Heading>Verifiable Credentialsの検証</Heading>
+          <Heading>参加証明の検証</Heading>
           <Divider />
           <FormControl>
             <FormLabel>Verifiable Presentation</FormLabel>
-            <Textarea value={vps} onChange={(ev) => setVPs(ev.target.value)} />
+            <Textarea value={vp} onChange={(ev) => setVP(ev.target.value)} />
           </FormControl>
           <Divider />
           <Button onClick={onClick} isLoading={loading}>

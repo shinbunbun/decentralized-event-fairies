@@ -357,7 +357,7 @@ export async function signInWithSIOP(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ authRes, createUser: false }),
+    body: JSON.stringify({ authRes, createUser: true }),
   });
   const sessionData = await session.json();
   const payload = jwt_decode(sessionData.jwt) as any;

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -11,9 +10,8 @@ import {
   Link as ChakraLink,
 } from '@chakra-ui/react';
 import { AddIcon, LinkIcon, AtSignIcon } from '@chakra-ui/icons';
-import { User } from 'firebase/auth';
 
-import { useAuthState } from '../lib';
+import { useAuthValue, User } from '../lib';
 
 function Home() {
   return (
@@ -66,7 +64,7 @@ function Account(props: User) {
 }
 
 export function Navbar() {
-  const user = useAuthState();
+  const user = useAuthValue();
 
   return (
     <Box as="header" pb={6}>

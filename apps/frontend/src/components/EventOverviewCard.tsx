@@ -11,12 +11,12 @@ import {
 } from '@chakra-ui/react';
 import { format as formatDate } from 'date-fns';
 
-import { EventData, issueVCs, issueVPs, useAuthState, UserData } from '../lib';
+import { EventData, issueVCs, issueVPs, useAuthValue, UserData } from '../lib';
 
 export function EventOverviewCard(props: EventData) {
   const [loading, setLoading] = useState(false);
   const [vps, setVPs] = useState<string | null>(null);
-  const auth = useAuthState();
+  const auth = useAuthValue();
   const format = 'yyyy/MM/dd HH:mm';
 
   const register = async () => {
@@ -27,7 +27,7 @@ export function EventOverviewCard(props: EventData) {
     setLoading(true);
 
     const user: UserData = {
-      id: auth.uid,
+      id: auth.did,
       name: auth.displayName || 'Anonymous',
       image: auth.photoURL || '',
       email: auth.email || '',

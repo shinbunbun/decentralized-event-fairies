@@ -1,12 +1,10 @@
-import { atom, selectorFamily, useRecoilValue } from 'recoil';
-import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
-  onAuthStateChanged,
-  User,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from 'firebase/auth';
+  atom,
+  selectorFamily,
+  useRecoilValue,
+  useRecoilState,
+  AtomEffect,
+} from 'recoil';
 import { OP, SIOP } from '@sphereon/did-auth-siop';
 import {
   Resolvable,
@@ -17,38 +15,9 @@ import {
 } from 'did-resolver';
 import { Client, init as initIOTA } from '@iota/identity-wasm/web';
 import { Buffer } from 'buffer';
+import jwt_decode from 'jwt-decode';
 
 window.Buffer = Buffer;
-
-// -----------------------------------------------------------------------------
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyA8qTql_PW8gnODLdX4_BD55diERI7o92E',
-  authDomain: 'decentralized-event-fairies.firebaseapp.com',
-  projectId: 'decentralized-event-fairies',
-  storageBucket: 'decentralized-event-fairies.appspot.com',
-  messagingSenderId: '526917576582',
-  appId: '1:526917576582:web:05587f9263faafc7ebee07',
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-const authState = atom<User | null>({
-  key: 'authState',
-  default: null,
-  effects: [
-    ({ setSelf }) => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setSelf(user);
-      });
-      return () => unsubscribe();
-    },
-  ],
-});
-
-export const useAuthState = () => useRecoilValue(authState);
 
 // -----------------------------------------------------------------------------
 
@@ -306,7 +275,10 @@ function getResolver(): Resolvable {
   return { resolve };
 }
 
-export async function signInWithSIOP(privateKey: string, did: string) {
+export async function signInWithSIOP(
+  privateKey: string,
+  did: string
+): Promise<User | null> {
   await initIOTA();
 
   const op = OP.builder()
@@ -335,6 +307,38 @@ export async function signInWithSIOP(privateKey: string, did: string) {
     body: JSON.stringify({ authRes }),
   });
   const sessionData = await session.json();
-  console.log(sessionData.jwt);
-  document.cookie = `fairies=${sessionData.jwt}`;
+  const payload = jwt_decode(sessionData.jwt) as any;
+  return 'sub' in payload ? { did: payload['sub'] } : null;
 }
+
+export interface User {
+  did: string;
+  displayName?: string;
+  photoURL?: string;
+  email?: string;
+}
+
+function localStorageEffect(key: string) {
+  const eff: AtomEffect<User | null> = ({ setSelf, onSet }) => {
+    const savedValue = localStorage.getItem(key);
+    if (savedValue != null) {
+      setSelf(JSON.parse(savedValue));
+    }
+
+    onSet((newValue, _, isReset) => {
+      isReset
+        ? localStorage.removeItem(key)
+        : localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
+  return eff;
+}
+
+const authState = atom<User | null>({
+  key: 'authState',
+  default: null,
+  effects: [localStorageEffect('current_user')],
+});
+
+export const useAuthState = () => useRecoilState(authState);
+export const useAuthValue = () => useRecoilValue(authState);

@@ -11,7 +11,7 @@ import {
   Heading,
 } from '@chakra-ui/react';
 
-import { signInWithSIOP } from '../lib';
+import { signInWithSIOP, useAuthState } from '../lib';
 
 export function SignInForm() {
   const [privateKey, setPrivateKey] = useState('');
@@ -20,9 +20,12 @@ export function SignInForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [auth, setAuth] = useAuthState();
+
   const signIn = async () => {
     setLoading(true);
-    await signInWithSIOP(privateKey, did);
+    const jwt = await signInWithSIOP(privateKey, did);
+    setAuth(jwt);
     setLoading(false);
   };
 

@@ -7,6 +7,18 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from 'firebase/auth';
+import { OP, SIOP } from '@sphereon/did-auth-siop';
+import {
+  Resolvable,
+  DIDResolutionOptions,
+  DIDResolutionResult,
+  DIDDocument,
+  DIDDocumentMetadata,
+} from 'did-resolver';
+import { Client, init as initIOTA } from '@iota/identity-wasm/web';
+import { Buffer } from 'buffer';
+
+window.Buffer = Buffer;
 
 // -----------------------------------------------------------------------------
 
@@ -38,12 +50,11 @@ const authState = atom<User | null>({
 
 export const useAuthState = () => useRecoilValue(authState);
 
-export const signIn = () => signInWithPopup(auth, provider);
-
 // -----------------------------------------------------------------------------
 
 const HASURA_URL = 'http://localhost:8080/v1/graphql';
 const BUNBUN_URL = 'http://localhost:8000';
+const NESTJS_URL = 'http://localhost:3333/api';
 
 export interface EventData {
   id: string;
@@ -272,3 +283,58 @@ export const verify = async (vps: string) => {
   });
   return true;
 };
+
+// -----------------------------------------------------------------------------
+
+function getResolver(): Resolvable {
+  async function resolve(
+    didUrl: string,
+    options?: DIDResolutionOptions
+  ): Promise<DIDResolutionResult> {
+    const client = new Client();
+    const resolved = await client.resolve(didUrl);
+    const document = resolved.intoDocument().toJSON();
+    const { doc, meta } = document;
+    return {
+      didResolutionMetadata: {
+        contentType: 'application/did+json',
+      },
+      didDocument: doc as DIDDocument,
+      didDocumentMetadata: meta as DIDDocumentMetadata,
+    };
+  }
+  return { resolve };
+}
+
+export async function signInWithSIOP(privateKey: string, did: string) {
+  await initIOTA();
+
+  const op = OP.builder()
+    .internalSignature(privateKey, did, did + '#controller')
+    .defaultResolver(getResolver())
+    .registrationBy(SIOP.PassBy.VALUE)
+    .build();
+
+  const authReq = await fetch(NESTJS_URL + '/auth/signin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  const authReqData = await authReq.json();
+  const encodedUri = authReqData.authReq.encodedUri;
+
+  const verifiedReq = await op.verifyAuthenticationRequest(encodedUri);
+  const authRes = await op.createAuthenticationResponse(verifiedReq);
+
+  const session = await fetch(NESTJS_URL + '/auth/siop', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ authRes }),
+  });
+  const sessionData = await session.json();
+  console.log(sessionData.jwt);
+  document.cookie = `fairies=${sessionData.jwt}`;
+}

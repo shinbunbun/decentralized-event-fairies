@@ -15,12 +15,10 @@ export const createDID = async (key_json: string) => {
 };
 
 export const createVC = async (
-  issuer_key_json: string,
+  private_key: Uint8Array,
   subject_json: string,
   issuer_did: string
 ) => {
-  const issuer_key = identity.KeyPair.fromJSON(issuer_key_json);
-
   const resolver = new identity.Resolver();
   const issuer_doc = (await resolver.resolve(issuer_did)).document();
 
@@ -36,7 +34,7 @@ export const createVC = async (
 
   const signedVC = issuer_doc.signCredential(
     unsignedVc,
-    issuer_key.private(),
+    private_key,
     '#sign-0',
     identity.ProofOptions.default()
   );

@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { getEventData } from '../lib';
 import { Loading } from '../components/Loading';
 import { EventOverviewCard } from '../components/EventOverviewCard';
+import { EventConfirmCard } from '../components/EventConfirmCard';
 import { EventDetailCard } from '../components/EventDetailCard';
 
 function EventDetailPage() {
@@ -18,6 +19,7 @@ function EventDetailPage() {
   return (
     <>
       <EventOverviewCard {...event} />
+      <EventConfirmCard {...event} />
       <EventDetailCard {...event} />
     </>
   );

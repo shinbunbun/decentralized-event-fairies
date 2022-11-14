@@ -1,13 +1,17 @@
-import { UseTabsProps } from '@chakra-ui/react';
 import { Controller, Post, Req, Body } from '@nestjs/common';
 
 import { AppService } from './app.service';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const axios = require('axios');
 
 type Input<T> = { input: T };
 type RegisterInput = Input<{ userID: UserID; eventID: EventID }>;
-type setRegisterEventTicketInput = Input<{ userID: UserID; eventID: EventID; ticket: string }>;
+type setRegisterEventTicketInput = Input<{
+  userID: UserID;
+  eventID: EventID;
+  ticket: string;
+}>;
 
 type UserID = string;
 type EventID = number;
@@ -20,32 +24,36 @@ export class HasuraController {
   async registerEvent(
     @Body() body: RegisterInput
   ): Promise<{ registeredEventID: number }> {
+    const { input } = body;
+    const { userID, eventID } = input;
 
-    let { input } = body;
-    let { userID, eventID } = input;
+    console.log(input);
 
     if (!(await this.isExistsEventByID(eventID))) {
+      console.log('isExistsEventByID');
       return {
         registeredEventID: null,
       };
     }
     if (!(await this.isExistsUserByID(userID))) {
+      console.log('isExistsUserByID');
       return {
         registeredEventID: null,
       };
     }
     if (await this.alreadyRegistered(userID, eventID)) {
+      console.log('alreadyRegistered');
       return {
         registeredEventID: eventID,
       };
     }
 
-    let registered = await this.requestMutation<{
+    const registered = await this.requestMutation<{
       insert_user_participant_event_one: any;
     }>(
       `
 mutation {
-  insert_user_participant_event_one(object:{user_id:\"${userID}\" event_id:${eventID}}){
+  insert_user_participant_event_one(object:{user_id:"${userID}" event_id:${eventID}}){
     id
   }
 }
@@ -87,60 +95,79 @@ query {
   }
 
   async alreadyRegistered(userID: UserID, eventID: EventID): Promise<boolean> {
-    let register = await this.findEventRegistration(userID, eventID);
+    const register = await this.findEventRegistration(userID, eventID);
     return register !== null;
   }
 
-  async findEventRegistration(userID: UserID, eventID: EventID): Promise<{ id: number, user_id: UserID, event_id: EventID, ticket: string } | null> {
-    let result = await this.requestQuery<{ user_participant_event: [{ id: number, user_id: UserID, event_id: EventID, ticket: string }] }>(
+  async findEventRegistration(
+    userID: UserID,
+    eventID: EventID
+  ): Promise<{
+    id: number;
+    user_id: UserID;
+    event_id: EventID;
+    ticket: string;
+  } | null> {
+    const result = await this.requestQuery<{
+      user_participant_event: [
+        { id: number; user_id: UserID; event_id: EventID; ticket: string }
+      ];
+    }>(
       `
 query {
-  user_participant_event(where:{user_id:{_eq:\"${userID}\"} event_id:{_eq:${eventID}}}){
+  user_participant_event(where:{user_id:{_eq:"${userID}"} event_id:{_eq:${eventID}}}){
       id
       user_id
       event_id
       ticket
   }
 }
-`)
+`
+    );
     if (result.user_participant_event.length != 1) {
       return null;
     }
     return result.user_participant_event[0];
   }
 
-  async setRegisterEventTicket(userID: UserID, eventID: EventID, ticket: string): Promise<number | null> {
-    let register = await this.findEventRegistration(userID, eventID);
+  async setRegisterEventTicket(
+    userID: UserID,
+    eventID: EventID,
+    ticket: string
+  ): Promise<number | null> {
+    const register = await this.findEventRegistration(userID, eventID);
     if (register === null) {
       return null;
     }
-    let register_id = register.id;
-    let result = await this.requestMutation<{ update_user_participant_event_by_pk: { id: number } | null }>(
+    const register_id = register.id;
+    const result = await this.requestMutation<{
+      update_user_participant_event_by_pk: { id: number } | null;
+    }>(
       `
 mutation {
-  update_user_participant_event_by_pk(pk_columns: {id: ${register_id}} _set:{ticket:\"${ticket}\"}){
+  update_user_participant_event_by_pk(pk_columns: {id: ${register_id}} _set:{ticket:"${ticket}"}){
     id
   }
 }
-`);
+`
+    );
     if (result.update_user_participant_event_by_pk === null) {
-      return null
+      return null;
     }
-    return result.update_user_participant_event_by_pk.id
+    return result.update_user_participant_event_by_pk.id;
   }
-
 
   @Post('/hasura/event/set_register_ticket')
   async SetRegisterEventTicket(
     @Body() body: setRegisterEventTicketInput
   ): Promise<{
-    registration_id: number | null
+    registration_id: number | null;
   }> {
-    let { input } = body;
-    let { userID, eventID, ticket } = input;
-    let result = await this.setRegisterEventTicket(userID, eventID, ticket);
+    const { input } = body;
+    const { userID, eventID, ticket } = input;
+    const result = await this.setRegisterEventTicket(userID, eventID, ticket);
     return {
-      registration_id: result
+      registration_id: result,
     };
   }
 

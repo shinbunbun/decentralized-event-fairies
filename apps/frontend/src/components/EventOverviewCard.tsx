@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AspectRatio,
   Box,
@@ -11,13 +11,27 @@ import {
 } from '@chakra-ui/react';
 import { format as formatDate } from 'date-fns';
 
-import { EventData, issueVCs, issueVPs, useAuthState, UserData } from '../lib';
+import {
+  EventData,
+  issueVCs,
+  issueVPs,
+  useAuthValue,
+  UserData,
+  registerEvent,
+} from '../lib';
 
 export function EventOverviewCard(props: EventData) {
   const [loading, setLoading] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [vps, setVPs] = useState<string | null>(null);
-  const auth = useAuthState();
+  const auth = useAuthValue();
   const format = 'yyyy/MM/dd HH:mm';
+
+  useEffect(() => {
+    if (auth) {
+      setDisabled(props.participants.includes(auth.did));
+    }
+  }, [props.participants, auth]);
 
   const register = async () => {
     if (!auth) {
@@ -26,18 +40,11 @@ export function EventOverviewCard(props: EventData) {
 
     setLoading(true);
 
-    const user: UserData = {
-      id: auth.uid,
-      name: auth.displayName || 'Anonymous',
-      image: auth.photoURL || '',
-      email: auth.email || '',
-    };
+    const eventID = await registerEvent(auth.did, props.id);
+    console.log(eventID);
 
-    const vcs = await issueVCs(user, props);
-    const vps = await issueVPs(user, vcs);
-
-    setVPs(JSON.stringify(vps, null, 2));
     setLoading(false);
+    setDisabled(true);
   };
 
   return (
@@ -60,7 +67,12 @@ export function EventOverviewCard(props: EventData) {
               {formatDate(props.start, format)} ~{' '}
               {formatDate(props.end, format)}
             </Text>
-            <Button colorScheme="blue" onClick={register} isLoading={loading}>
+            <Button
+              colorScheme="blue"
+              onClick={register}
+              isLoading={loading}
+              disabled={disabled}
+            >
               参加登録
             </Button>
           </VStack>

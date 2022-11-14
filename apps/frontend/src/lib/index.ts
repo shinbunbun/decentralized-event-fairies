@@ -1,49 +1,29 @@
-import { atom, selectorFamily, useRecoilValue } from 'recoil';
-import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
-  onAuthStateChanged,
-  User,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from 'firebase/auth';
+  atom,
+  selectorFamily,
+  useRecoilValue,
+  useRecoilState,
+  AtomEffect,
+} from 'recoil';
+import { OP, SIOP } from '@sphereon/did-auth-siop';
+import {
+  Resolvable,
+  DIDResolutionOptions,
+  DIDResolutionResult,
+  DIDDocument,
+  DIDDocumentMetadata,
+} from 'did-resolver';
+import { Client, init as initIOTA } from '@iota/identity-wasm/web';
+import { Buffer } from 'buffer';
+import jwt_decode from 'jwt-decode';
 
-// -----------------------------------------------------------------------------
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyA8qTql_PW8gnODLdX4_BD55diERI7o92E',
-  authDomain: 'decentralized-event-fairies.firebaseapp.com',
-  projectId: 'decentralized-event-fairies',
-  storageBucket: 'decentralized-event-fairies.appspot.com',
-  messagingSenderId: '526917576582',
-  appId: '1:526917576582:web:05587f9263faafc7ebee07',
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-const authState = atom<User | null>({
-  key: 'authState',
-  default: null,
-  effects: [
-    ({ setSelf }) => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setSelf(user);
-      });
-      return () => unsubscribe();
-    },
-  ],
-});
-
-export const useAuthState = () => useRecoilValue(authState);
-
-export const signIn = () => signInWithPopup(auth, provider);
+window.Buffer = Buffer;
 
 // -----------------------------------------------------------------------------
 
 const HASURA_URL = 'http://localhost:8080/v1/graphql';
 const BUNBUN_URL = 'http://localhost:8000';
+const NESTJS_URL = 'http://localhost:3333/api';
 
 export interface EventData {
   id: string;
@@ -52,12 +32,29 @@ export interface EventData {
   description: string;
   start: Date;
   end: Date;
+  admins: string[];
+  participants: string[];
 }
 
 const getEventDataQuery = `
 query getEventByID($id: Int!) {
   getEvent(id: $id) {
-    id title thumbnail description start end
+    id
+    title
+    thumbnail
+    description
+    start
+    end
+    event_admins {
+      admin {
+        id
+      }
+    }
+    event_participants {
+      participant {
+        id
+      }
+    }
   }
 }
 `;
@@ -92,6 +89,10 @@ export const getEventData = selectorFamily<
         description: event['description'],
         start: new Date(event['start']),
         end: new Date(event['end']),
+        admins: event['event_admins'].map((admin: any) => admin['admin']['id']),
+        participants: event['event_participants'].map(
+          (v: any) => v['participant']['id']
+        ),
       };
     },
 });
@@ -105,6 +106,16 @@ query getAllEvents {
     title
     end
     description
+    event_admins {
+      admin {
+        id
+      }
+    }
+    event_participants {
+      participant {
+        id
+      }
+    }
   }
 }
 `;
@@ -130,20 +141,29 @@ export const getAllEvents = selectorFamily<EventData[], any>({
       description: event['description'],
       start: new Date(event['start']),
       end: new Date(event['end']),
+      admins: event['event_admins'].map((admin: any) => admin['admin']['id']),
+      participants: event['event_participants'].map(
+        (v: any) => v['participant']['id']
+      ),
     }));
   },
 });
 
 const createEventDataQuery = `
 mutation createEvent(
-  $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!
+  $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!, $did: String!
 ) {
   createEvent(object: {
     title: $title,
     thumbnail: $thumbnail,
     description: $description,
     start: $start,
-    end: $end
+    end: $end,
+    event_admins: {
+      data: {
+        user_id: $did
+      }
+    },
   }) {
     id
   }
@@ -151,7 +171,8 @@ mutation createEvent(
 `;
 
 export const createEventData = async (
-  variables: Omit<EventData, 'id'>
+  variables: Omit<EventData, 'id' | 'participants' | 'admins'>,
+  did: string
 ): Promise<number> => {
   const res = await fetch(HASURA_URL, {
     method: 'POST',
@@ -160,7 +181,7 @@ export const createEventData = async (
     },
     body: JSON.stringify({
       query: createEventDataQuery,
-      variables: variables,
+      variables: { ...variables, did },
     }),
   });
   const data = await res.json();
@@ -272,3 +293,106 @@ export const verify = async (vps: string) => {
   });
   return true;
 };
+
+export const registerEvent = async (userID: string, eventID: string) => {
+  const res = await fetch(NESTJS_URL + '/hasura/event/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ input: { userID, eventID } }),
+  });
+  const { registeredEventID } = await res.json();
+  return { eventId: registeredEventID };
+};
+
+// -----------------------------------------------------------------------------
+
+function getResolver(): Resolvable {
+  async function resolve(
+    didUrl: string,
+    options?: DIDResolutionOptions
+  ): Promise<DIDResolutionResult> {
+    const client = new Client();
+    const resolved = await client.resolve(didUrl);
+    const document = resolved.intoDocument().toJSON();
+    const { doc, meta } = document;
+    return {
+      didResolutionMetadata: {
+        contentType: 'application/did+json',
+      },
+      didDocument: doc as DIDDocument,
+      didDocumentMetadata: meta as DIDDocumentMetadata,
+    };
+  }
+  return { resolve };
+}
+
+export async function signInWithSIOP(
+  privateKey: string,
+  did: string
+): Promise<User | null> {
+  await initIOTA();
+
+  const op = OP.builder()
+    .internalSignature(privateKey, did, did + '#controller')
+    .defaultResolver(getResolver())
+    .registrationBy(SIOP.PassBy.VALUE)
+    .build();
+
+  const authReq = await fetch(NESTJS_URL + '/auth/signin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  const authReqData = await authReq.json();
+  const encodedUri = authReqData.authReq.encodedUri;
+
+  const verifiedReq = await op.verifyAuthenticationRequest(encodedUri);
+  const authRes = await op.createAuthenticationResponse(verifiedReq);
+
+  const session = await fetch(NESTJS_URL + '/auth/siop', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ authRes, createUser: true }),
+  });
+  const sessionData = await session.json();
+  const payload = jwt_decode(sessionData.jwt) as any;
+  console.log(payload);
+  return 'aud' in payload ? { did: payload['aud'] } : null;
+}
+
+export interface User {
+  did: string;
+  displayName?: string;
+  photoURL?: string;
+  email?: string;
+}
+
+function localStorageEffect(key: string) {
+  const eff: AtomEffect<User | null> = ({ setSelf, onSet }) => {
+    const savedValue = localStorage.getItem(key);
+    if (savedValue != null) {
+      setSelf(JSON.parse(savedValue));
+    }
+
+    onSet((newValue, _, isReset) => {
+      isReset
+        ? localStorage.removeItem(key)
+        : localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
+  return eff;
+}
+
+const authState = atom<User | null>({
+  key: 'authState',
+  default: null,
+  effects: [localStorageEffect('current_user')],
+});
+
+export const useAuthState = () => useRecoilState(authState);
+export const useAuthValue = () => useRecoilValue(authState);

@@ -7,13 +7,16 @@ services:
       - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
+    #
   graphql-engine:
-    image: hasura/graphql-engine:v2.13.0
+    image: hasura/graphql-engine:v2.15.0
     ports:
       - '8080:8080'
     depends_on:
       - 'postgres'
     restart: always
+    #
+    #
     environment:
       ## postgres database to store Hasura metadata
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres

@@ -32,12 +32,29 @@ export interface EventData {
   description: string;
   start: Date;
   end: Date;
+  admins: string[];
+  participants: string[];
 }
 
 const getEventDataQuery = `
 query getEventByID($id: Int!) {
   getEvent(id: $id) {
-    id title thumbnail description start end
+    id
+    title
+    thumbnail
+    description
+    start
+    end
+    event_admins {
+      admin {
+        id
+      }
+    }
+    event_participants {
+      participant {
+        id
+      }
+    }
   }
 }
 `;
@@ -72,6 +89,10 @@ export const getEventData = selectorFamily<
         description: event['description'],
         start: new Date(event['start']),
         end: new Date(event['end']),
+        admins: event['event_admins'].map((admin: any) => admin['admin']['id']),
+        participants: event['event_participants'].map(
+          (v: any) => v['participant']['id']
+        ),
       };
     },
 });
@@ -85,6 +106,16 @@ query getAllEvents {
     title
     end
     description
+    event_admins {
+      admin {
+        id
+      }
+    }
+    event_participants {
+      participant {
+        id
+      }
+    }
   }
 }
 `;
@@ -110,20 +141,29 @@ export const getAllEvents = selectorFamily<EventData[], any>({
       description: event['description'],
       start: new Date(event['start']),
       end: new Date(event['end']),
+      admins: event['event_admins'].map((admin: any) => admin['admin']['id']),
+      participants: event['event_participants'].map(
+        (v: any) => v['participant']['id']
+      ),
     }));
   },
 });
 
 const createEventDataQuery = `
 mutation createEvent(
-  $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!
+  $title: String!, $thumbnail: String, $description: String!, $start: date!, $end: date!, $did: String!
 ) {
   createEvent(object: {
     title: $title,
     thumbnail: $thumbnail,
     description: $description,
     start: $start,
-    end: $end
+    end: $end,
+    event_admins: {
+      data: {
+        user_id: $did
+      }
+    },
   }) {
     id
   }
@@ -131,7 +171,8 @@ mutation createEvent(
 `;
 
 export const createEventData = async (
-  variables: Omit<EventData, 'id'>
+  variables: Omit<EventData, 'id' | 'participants' | 'admins'>,
+  did: string
 ): Promise<number> => {
   const res = await fetch(HASURA_URL, {
     method: 'POST',
@@ -140,7 +181,7 @@ export const createEventData = async (
     },
     body: JSON.stringify({
       query: createEventDataQuery,
-      variables: variables,
+      variables: { ...variables, did },
     }),
   });
   const data = await res.json();

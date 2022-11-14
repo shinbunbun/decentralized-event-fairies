@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AspectRatio,
   Box,
@@ -22,9 +22,16 @@ import {
 
 export function EventOverviewCard(props: EventData) {
   const [loading, setLoading] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [vps, setVPs] = useState<string | null>(null);
   const auth = useAuthValue();
   const format = 'yyyy/MM/dd HH:mm';
+
+  useEffect(() => {
+    if (auth) {
+      setDisabled(props.participants.includes(auth.did));
+    }
+  }, [props.participants, auth]);
 
   const register = async () => {
     if (!auth) {
@@ -37,6 +44,7 @@ export function EventOverviewCard(props: EventData) {
     console.log(eventID);
 
     setLoading(false);
+    setDisabled(true);
   };
 
   return (
@@ -59,7 +67,12 @@ export function EventOverviewCard(props: EventData) {
               {formatDate(props.start, format)} ~{' '}
               {formatDate(props.end, format)}
             </Text>
-            <Button colorScheme="blue" onClick={register} isLoading={loading}>
+            <Button
+              colorScheme="blue"
+              onClick={register}
+              isLoading={loading}
+              disabled={disabled}
+            >
               参加登録
             </Button>
           </VStack>

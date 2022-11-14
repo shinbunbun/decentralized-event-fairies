@@ -12,7 +12,7 @@ import {
   Heading,
 } from '@chakra-ui/react';
 
-import { createEventData } from '../lib';
+import { createEventData, useAuthValue } from '../lib';
 
 export function EventEditForm() {
   const [title, setTitle] = useState('');
@@ -24,17 +24,24 @@ export function EventEditForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const auth = useAuthValue();
+
   const createEvent = async () => {
-    setLoading(true);
-    const id = await createEventData({
-      title,
-      thumbnail,
-      description,
-      start: new Date(start),
-      end: new Date(end),
-    });
-    navigate(`/event/${id}`);
-    setLoading(false);
+    if (auth) {
+      setLoading(true);
+      const id = await createEventData(
+        {
+          title,
+          thumbnail,
+          description,
+          start: new Date(start),
+          end: new Date(end),
+        },
+        auth.did
+      );
+      navigate(`/event/${id}`);
+      setLoading(false);
+    }
   };
 
   return (

@@ -11,7 +11,14 @@ import {
 } from '@chakra-ui/react';
 import { format as formatDate } from 'date-fns';
 
-import { EventData, issueVCs, issueVPs, useAuthValue, UserData } from '../lib';
+import {
+  EventData,
+  issueVCs,
+  issueVPs,
+  useAuthValue,
+  UserData,
+  registerEvent,
+} from '../lib';
 
 export function EventOverviewCard(props: EventData) {
   const [loading, setLoading] = useState(false);
@@ -26,17 +33,9 @@ export function EventOverviewCard(props: EventData) {
 
     setLoading(true);
 
-    const user: UserData = {
-      id: auth.did,
-      name: auth.displayName || 'Anonymous',
-      image: auth.photoURL || '',
-      email: auth.email || '',
-    };
+    const eventID = await registerEvent(auth.did, props.id);
+    console.log(eventID);
 
-    const vcs = await issueVCs(user, props);
-    const vps = await issueVPs(user, vcs);
-
-    setVPs(JSON.stringify(vps, null, 2));
     setLoading(false);
   };
 

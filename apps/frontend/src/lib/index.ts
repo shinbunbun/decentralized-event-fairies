@@ -253,6 +253,18 @@ export const verify = async (vps: string) => {
   return true;
 };
 
+export const registerEvent = async (userID: string, eventID: string) => {
+  const res = await fetch(NESTJS_URL + '/hasura/event/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ input: { userID, eventID } }),
+  });
+  const { registeredEventID } = await res.json();
+  return { eventId: registeredEventID };
+};
+
 // -----------------------------------------------------------------------------
 
 function getResolver(): Resolvable {
@@ -304,11 +316,12 @@ export async function signInWithSIOP(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ authRes }),
+    body: JSON.stringify({ authRes, createUser: false }),
   });
   const sessionData = await session.json();
   const payload = jwt_decode(sessionData.jwt) as any;
-  return 'sub' in payload ? { did: payload['sub'] } : null;
+  console.log(payload);
+  return 'aud' in payload ? { did: payload['aud'] } : null;
 }
 
 export interface User {

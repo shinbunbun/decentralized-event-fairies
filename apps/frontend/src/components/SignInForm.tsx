@@ -27,6 +27,7 @@ export function SignInForm() {
     const jwt = await signInWithSIOP(privateKey, did);
     setAuth(jwt);
     setLoading(false);
+    navigate('/');
   };
 
   return (

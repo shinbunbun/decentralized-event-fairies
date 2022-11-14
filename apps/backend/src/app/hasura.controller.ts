@@ -1,9 +1,9 @@
-import { UseTabsProps } from '@chakra-ui/react';
 import { Controller, Post, Req, Body } from '@nestjs/common';
 
 import { AppService } from './app.service';
 
-import axios from 'axios';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const axios = require('axios');
 
 type Input<T> = { input: T };
 type RegisterInput = Input<{ userID: UserID; eventID: EventID }>;
@@ -27,17 +27,22 @@ export class HasuraController {
     const { input } = body;
     const { userID, eventID } = input;
 
+    console.log(input);
+
     if (!(await this.isExistsEventByID(eventID))) {
+      console.log('isExistsEventByID');
       return {
         registeredEventID: null,
       };
     }
     if (!(await this.isExistsUserByID(userID))) {
+      console.log('isExistsUserByID');
       return {
         registeredEventID: null,
       };
     }
     if (await this.alreadyRegistered(userID, eventID)) {
+      console.log('alreadyRegistered');
       return {
         registeredEventID: eventID,
       };

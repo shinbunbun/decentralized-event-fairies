@@ -12,6 +12,9 @@ import { Client } from '@iota/identity-wasm/node';
 import { AppService } from './app.service';
 import { createJwt } from '../jwt/jwt';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const axios = require('axios');
+
 const RP_KEYS = {
   hexPrivateKey:
     '5fbed33a79c318bbead51117df0cea089be905588ba6762123a78abc658eb48c',
@@ -63,22 +66,53 @@ export class AppController {
   }
 
   @Post('/auth/siop')
-  async siop(@Body() body: { authRes: any }) {
+  async siop(@Body() body: { authRes: any; createUser: boolean }) {
     const verifiedRes = await rp.verifyAuthenticationResponseJwt(
       body.authRes.jwt,
       {
         audience: redirect,
       }
     );
+
+    console.log(verifiedRes);
+
+    let userID = verifiedRes.payload.did;
+
+    if (body.createUser) {
+      const res = await this.requestMutation<{ createUser: { id: string } }>(`
+mutation {
+  createUser(object:{id: "${userID}", name: "${userID}", email: "${userID}"}){
+    id
+  }
+}`);
+      userID = res.createUser.id;
+    }
+
     const payload = {
-      aud: verifiedRes.signer.id,
+      aud: userID,
       exp: Date.now(),
       iat: Date.now(),
-      sub: verifiedRes.signer.id,
+      sub: userID,
       iss: RP_KEYS.did,
     };
     const jwt = await createJwt(RP_KEYS.hexPrivateKey, payload);
     console.log(jwt);
     return { jwt };
+  }
+
+  async requestQuery<T>(query: string): Promise<T> {
+    return this.request<T>(query);
+  }
+
+  async requestMutation<T>(mutation: string): Promise<T> {
+    return this.request<T>(mutation);
+  }
+
+  async request<T>(req: string): Promise<T> {
+    return axios
+      .post('http://localhost:8080/v1/graphql', {
+        query: req,
+      })
+      .then((x) => x.data.data);
   }
 }

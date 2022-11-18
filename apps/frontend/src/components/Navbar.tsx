@@ -24,14 +24,22 @@ function Home() {
 function SignIn() {
   const navigate = useNavigate();
 
-  const onClick = async () => {
+  const onClickSignIn = async () => {
     navigate(`/signin`);
+  };
+  const onClickSignUp = async () => {
+    navigate(`/signup`);
   };
 
   return (
-    <Button fontSize="sm" colorScheme="blue" onClick={onClick}>
-      Sign In
-    </Button>
+    <Box>
+      <Button fontSize="sm" colorScheme="blue" onClick={onClickSignIn}>
+        Sign In
+      </Button>
+      <Button fontSize="sm" colorScheme="blackAlpha" onClick={onClickSignUp} style={{marginLeft: "5px"}}>
+        Sign Up
+      </Button>
+    </Box>
   );
 }
 

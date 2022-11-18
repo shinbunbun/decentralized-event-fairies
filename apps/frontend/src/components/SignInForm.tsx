@@ -24,7 +24,7 @@ export function SignInForm() {
 
   const signIn = async () => {
     setLoading(true);
-    const jwt = await signInWithSIOP(privateKey, did);
+    const jwt = await signInWithSIOP(privateKey, did, false);
     setAuth(jwt);
     setLoading(false);
     navigate('/');

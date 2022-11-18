@@ -11,6 +11,7 @@ const UserProfilePage = lazy(() => import('./pages/UserProfilePage'));
 const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 const DIDTestPage = lazy(() => import('./pages/DIDTestPage'));
 const SignInPage = lazy(() => import('./pages/SignInPage'));
+const SignUpPage = lazy(() => import('./pages/SignUpPage'));
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: 'signin',
         element: <SignInPage />,
+      },
+      {
+        path: 'signup',
+        element: <SignUpPage />,
       },
     ],
   },

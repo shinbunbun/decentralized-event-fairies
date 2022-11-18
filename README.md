@@ -13,6 +13,12 @@ npm start frontend
 ### バックエンド
 
 ```
+npm start backend
+```
+
+###　hasura
+
+```
 docker compose up -d
 cd apps/hasura/initialize
 for i in *.sh

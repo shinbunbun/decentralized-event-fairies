@@ -23,7 +23,7 @@ window.Buffer = Buffer;
 
 const HASURA_URL = 'http://localhost:8080/v1/graphql';
 const BUNBUN_URL = 'http://localhost:8000';
-const NESTJS_URL = 'http://localhost:3334/api';
+const NESTJS_URL = 'http://localhost:3333/api';
 
 export interface EventData {
   id: string;

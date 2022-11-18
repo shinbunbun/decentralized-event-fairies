@@ -13,7 +13,7 @@ import {
   DIDDocument,
   DIDDocumentMetadata,
 } from 'did-resolver';
-import { Client, init as initIOTA } from '@iota/identity-wasm/web';
+import { Client, init as initIOTA, KeyPair, KeyType, Document as IOTADocument } from '@iota/identity-wasm/web';
 import { Buffer } from 'buffer';
 import jwt_decode from 'jwt-decode';
 
@@ -330,7 +330,8 @@ function getResolver(): Resolvable {
 
 export async function signInWithSIOP(
   privateKey: string,
-  did: string
+  did: string,
+  createUser: boolean
 ): Promise<User | null> {
   await initIOTA();
 
@@ -357,7 +358,7 @@ export async function signInWithSIOP(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ authRes, createUser: true }),
+    body: JSON.stringify({ authRes, createUser }),
   });
   const sessionData = await session.json();
   const payload = jwt_decode(sessionData.jwt) as any;
@@ -396,3 +397,21 @@ const authState = atom<User | null>({
 
 export const useAuthState = () => useRecoilState(authState);
 export const useAuthValue = () => useRecoilValue(authState);
+
+export const createKeyPair = async () => {
+  await initIOTA();
+  const key = new KeyPair(KeyType.Ed25519);
+  return key;
+};
+
+export const createDID = async (key: KeyPair) => {
+  const client = new Client();
+
+  const doc = new IOTADocument(key);
+
+  doc.signSelf(key, '#sign-0');
+
+  await client.publishDocument(doc);
+
+  return doc;
+};
